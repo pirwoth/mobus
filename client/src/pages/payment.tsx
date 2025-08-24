@@ -29,10 +29,13 @@ export default function Payment() {
   });
 
   // Fetch booking details
-  const { data: booking, isLoading } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["/api/bookings", bookingId],
     enabled: !!bookingId,
   });
+
+  // Ensure booking is always an object with expected properties
+  const booking: any = data && typeof data === 'object' ? data : {};
 
   const paymentMutation = useMutation({
     mutationFn: async () => {
@@ -118,10 +121,10 @@ export default function Payment() {
   const totalAmount = parseFloat(booking.totalAmount) + serviceFee + taxes;
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2" data-testid="text-payment-title">
+    <div className="min-h-screen bg-gray-50 py-6 md:py-12">
+      <div className="max-w-2xl mx-auto px-2 sm:px-4 lg:px-8">
+        <div className="text-center mb-6 md:mb-8">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2" data-testid="text-payment-title">
             Payment
           </h2>
           <p className="text-gray-600">Complete your booking with secure payment</p>

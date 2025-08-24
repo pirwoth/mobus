@@ -43,7 +43,7 @@ export function Navigation() {
       default:
         return [
           { href: "/", label: "Home" },
-          { href: "/bookings", label: "My Bookings" },
+          { href: "/my-bookings", label: "My Bookings" },
           { href: "/help", label: "Help" },
         ];
     }

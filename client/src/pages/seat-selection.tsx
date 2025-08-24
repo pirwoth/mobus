@@ -35,7 +35,7 @@ export default function SeatSelection() {
   });
 
   // Find the specific route
-  const route = routes?.find((r: any) => r.id === routeId);
+  const route = Array.isArray(routes) ? routes.find((r: any) => r.id === routeId) : undefined;
 
   const bookingMutation = useMutation({
     mutationFn: async (bookingData: any) => {
@@ -150,10 +150,10 @@ export default function SeatSelection() {
   const totalAmount = selectedSeats.length * parseFloat(route.price);
 
   return (
-    <div className="min-h-screen bg-white py-12">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2" data-testid="text-seat-selection-title">
+    <div className="min-h-screen bg-white py-6 md:py-12">
+      <div className="max-w-6xl mx-auto px-2 sm:px-4 lg:px-8">
+        <div className="text-center mb-6 md:mb-8">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2" data-testid="text-seat-selection-title">
             Select Your Seats
           </h2>
           <p className="text-gray-600" data-testid="text-route-info">
@@ -161,9 +161,9 @@ export default function SeatSelection() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-8">
           {/* Seat Map */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 mb-6 lg:mb-0">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
@@ -194,7 +194,7 @@ export default function SeatSelection() {
                 </div>
 
                 {/* Seat Grid */}
-                <div className="grid grid-cols-4 gap-3 max-w-md mx-auto">
+                <div className="grid grid-cols-4 gap-2 md:gap-3 max-w-xs md:max-w-md mx-auto">
                   {seats.map((seat, index) => (
                     <div key={seat.number} className="flex">
                       <Button
@@ -270,7 +270,7 @@ export default function SeatSelection() {
 
           {/* Booking Summary */}
           <div className="lg:col-span-1">
-            <Card className="sticky top-24">
+            <Card className="sticky top-4 md:top-24">
               <CardHeader>
                 <CardTitle>Booking Summary</CardTitle>
               </CardHeader>

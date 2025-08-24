@@ -24,10 +24,13 @@ export default function Home() {
   });
   const [hasSearched, setHasSearched] = useState(false);
 
-  const { data: routes, isLoading, error } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: ["/api/routes/search", searchParams.from, searchParams.to, searchParams.date],
     enabled: hasSearched && !!searchParams.from && !!searchParams.to && !!searchParams.date,
   });
+
+  // Ensure routes is always an array for rendering
+  const routes: any[] = Array.isArray(data) ? data : [];
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,16 +48,15 @@ export default function Home() {
   };
 
   const cities = [
-    "New York", "Boston", "Philadelphia", "Washington DC", "Baltimore", 
-    "Atlanta", "Miami", "Chicago", "Detroit", "Toronto"
+    "Kampala", "Gulu", "Arua", "Mbarara", "Jinja", "Mbale", "Fort Portal", "Masaka", "Entebbe", "Kasese", "Soroti", "Tororo", "Mukono", "Kabale"
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+  <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <section className="py-12" data-testid="section-hero">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
+      <section className="py-8 md:py-12" data-testid="section-hero">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
+          <div className="text-center mb-8 md:mb-12">
             <h2 className="text-4xl font-bold text-gray-900 mb-4" data-testid="text-hero-title">
               Book Your Bus Ticket
             </h2>
@@ -64,8 +66,8 @@ export default function Home() {
           </div>
 
           {/* Search Form */}
-          <Card className="p-8 mb-12">
-            <form onSubmit={handleSearch} className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <Card className="p-4 md:p-8 mb-8 md:mb-12">
+            <form onSubmit={handleSearch} className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6">
               <div>
                 <Label htmlFor="from" className="text-sm font-medium text-gray-700 mb-2 block">
                   From
@@ -141,7 +143,7 @@ export default function Home() {
 
           {/* Search Results */}
           {hasSearched && (
-            <div className="space-y-6">
+            <div className="space-y-4 md:space-y-6">
               <h3 className="text-2xl font-bold text-gray-900" data-testid="text-results-title">
                 Available Buses
               </h3>
@@ -184,7 +186,7 @@ export default function Home() {
                           </div>
                         </div>
                         
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 md:gap-4 text-sm">
                           <div>
                             <p className="text-gray-500 flex items-center">
                               <Clock className="mr-1 h-4 w-4" />
@@ -237,7 +239,7 @@ export default function Home() {
                         )}
                       </div>
                       
-                      <div className="mt-6 lg:mt-0 lg:ml-6 text-right">
+                      <div className="mt-4 md:mt-6 lg:mt-0 lg:ml-6 text-right">
                         <div className="text-2xl font-bold text-gray-900 mb-2" data-testid={`text-price-${route.id}`}>
                           ${route.price}
                         </div>
