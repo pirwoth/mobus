@@ -1,22 +1,12 @@
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Download } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Download } from "lucide-react";
+import BottomNav from "@/components/BottomNav";
 
 const Ticket = () => {
-  const navigate = useNavigate();
-
   return (
-    <div className="min-h-screen bg-background">
-      <header className="px-6 py-4 border-b border-border flex items-center gap-4">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => navigate("/home")}
-          className="rounded-full"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <h1 className="text-xl font-semibold">My Ticket</h1>
+    <div className="min-h-screen bg-background pb-24">
+      <header className="px-6 py-6 border-b border-border">
+        <h1 className="text-2xl font-bold">My Ticket</h1>
       </header>
 
       <main className="px-6 py-8">
@@ -82,6 +72,8 @@ const Ticket = () => {
           </Button>
         </div>
       </main>
+
+      <BottomNav />
     </div>
   );
 };
