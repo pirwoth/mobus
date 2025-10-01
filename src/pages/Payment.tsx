@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, CreditCard, Smartphone } from "lucide-react";
+import BottomNav from "@/components/BottomNav";
 
 const paymentMethods = [
   {
@@ -27,7 +28,7 @@ const Payment = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-24">
       <header className="px-6 py-4 border-b border-border flex items-center gap-4">
         <Button
           variant="ghost"
@@ -40,71 +41,75 @@ const Payment = () => {
         <h1 className="text-xl font-semibold">Payment Method</h1>
       </header>
 
-      <main className="px-6 py-8">
-        <div className="space-y-4 mb-8">
-          {paymentMethods.map((method) => {
-            const Icon = method.icon;
-            const isSelected = selectedMethod === method.id;
+      <main className="px-6 py-8 flex justify-center">
+        <div className="w-full max-w-md">
+          <div className="space-y-4 mb-8">
+            {paymentMethods.map((method) => {
+              const Icon = method.icon;
+              const isSelected = selectedMethod === method.id;
 
-            return (
-              <button
-                key={method.id}
-                onClick={() => setSelectedMethod(method.id)}
-                className={`w-full bg-card rounded-ios-lg shadow-ios p-6 text-left transition-all ${
-                  isSelected ? "ring-2 ring-foreground" : ""
-                }`}
-              >
-                <div className="flex items-center gap-4">
-                  <div
-                    className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                      isSelected ? "bg-foreground text-background" : "bg-muted"
-                    }`}
-                  >
-                    <Icon className="h-6 w-6" />
+              return (
+                <button
+                  key={method.id}
+                  onClick={() => setSelectedMethod(method.id)}
+                  className={`w-full bg-card rounded-ios-lg shadow-ios p-6 text-left transition-all ${
+                    isSelected ? "ring-2 ring-foreground" : ""
+                  }`}
+                >
+                  <div className="flex items-center gap-4">
+                    <div
+                      className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                        isSelected ? "bg-foreground text-background" : "bg-muted"
+                      }`}
+                    >
+                      <Icon className="h-6 w-6" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-lg">{method.name}</h3>
+                    </div>
+                    <div
+                      className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                        isSelected
+                          ? "border-foreground bg-foreground"
+                          : "border-border"
+                      }`}
+                    >
+                      {isSelected && (
+                        <div className="w-3 h-3 rounded-full bg-background" />
+                      )}
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-lg">{method.name}</h3>
-                  </div>
-                  <div
-                    className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                      isSelected
-                        ? "border-foreground bg-foreground"
-                        : "border-border"
-                    }`}
-                  >
-                    {isSelected && (
-                      <div className="w-3 h-3 rounded-full bg-background" />
-                    )}
-                  </div>
-                </div>
-              </button>
-            );
-          })}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="bg-muted rounded-ios-lg p-5 mb-6">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-muted-foreground">Subtotal</span>
+              <span className="font-semibold">UGX 135,000</span>
+            </div>
+            <div className="flex items-center justify-between mb-3 pb-3 border-b border-border">
+              <span className="text-muted-foreground">Service Fee</span>
+              <span className="font-semibold">UGX 5,000</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-lg font-semibold">Total</span>
+              <span className="text-2xl font-bold">UGX 140,000</span>
+            </div>
+          </div>
+
+          <Button
+            onClick={handleConfirmPayment}
+            disabled={!selectedMethod}
+            className="w-full rounded-ios h-14 text-base font-medium"
+          >
+            Confirm Payment
+          </Button>
         </div>
-
-        <div className="bg-muted rounded-ios-lg p-5 mb-6">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-muted-foreground">Subtotal</span>
-            <span className="font-semibold">$135.00</span>
-          </div>
-          <div className="flex items-center justify-between mb-3 pb-3 border-b border-border">
-            <span className="text-muted-foreground">Service Fee</span>
-            <span className="font-semibold">$5.00</span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-lg font-semibold">Total</span>
-            <span className="text-2xl font-bold">$140.00</span>
-          </div>
-        </div>
-
-        <Button
-          onClick={handleConfirmPayment}
-          disabled={!selectedMethod}
-          className="w-full rounded-ios h-14 text-base font-medium"
-        >
-          Confirm Payment
-        </Button>
       </main>
+
+      <BottomNav />
     </div>
   );
 };
