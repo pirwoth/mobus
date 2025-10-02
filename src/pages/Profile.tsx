@@ -41,9 +41,31 @@ interface UserProfile {
 const Profile = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(() => {
+    return localStorage.getItem('darkMode') === 'true';
+  });
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Initialize dark mode from localStorage
+    const isDark = localStorage.getItem('darkMode') === 'true';
+    setDarkMode(isDark);
+    if (isDark) {
+      document.documentElement.classList.add('dark');
+    }
+  }, []);
+
+  useEffect(() => {
+    // Apply dark mode changes
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('darkMode', 'true');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('darkMode', 'false');
+    }
+  }, [darkMode]);
 
   useEffect(() => {
     loadProfile();
@@ -112,7 +134,8 @@ const Profile = () => {
         <h1 className="text-2xl font-bold">Profile</h1>
       </header>
 
-      <main className="px-6 py-6 space-y-6">
+      <main className="px-6 py-8 flex items-center justify-center min-h-[calc(100vh-73px-96px)]">
+        <div className="w-full max-w-md space-y-6">
         {/* Account Info */}
         <div className="bg-card rounded-ios-lg shadow-ios p-6">
           {isLoading ? (
@@ -206,6 +229,7 @@ const Profile = () => {
           <LogOut className="mr-2 h-5 w-5" />
           Logout
         </Button>
+        </div>
       </main>
 
       <BottomNav />
