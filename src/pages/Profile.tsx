@@ -1,41 +1,109 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { LogOut, Moon, Sun, MapPin, Calendar } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import BottomNav from "@/components/BottomNav";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const mockTravelHistory = [
   {
     id: 1,
-    from: "New York",
-    to: "Boston",
+    from: "Kampala",
+    to: "Entebbe",
     date: "Jan 15, 2025",
     status: "Completed",
   },
   {
     id: 2,
-    from: "Boston",
-    to: "Philadelphia",
+    from: "Kampala",
+    to: "Jinja",
     date: "Dec 28, 2024",
     status: "Completed",
   },
   {
     id: 3,
-    from: "Philadelphia",
-    to: "Washington DC",
+    from: "Entebbe",
+    to: "Kampala",
     date: "Dec 15, 2024",
     status: "Completed",
   },
 ];
 
+interface UserProfile {
+  full_name: string | null;
+  email: string;
+  phone: string | null;
+}
+
 const Profile = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [darkMode, setDarkMode] = useState(false);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const handleLogout = () => {
-    navigate("/login");
+  useEffect(() => {
+    loadProfile();
+  }, []);
+
+  const loadProfile = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        navigate("/login");
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("full_name, email, phone")
+        .eq("id", session.user.id)
+        .single();
+
+      if (error) {
+        toast({
+          title: "Error loading profile",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        setProfile(data);
+      }
+    } catch (error) {
+      console.error("Error loading profile:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        toast({
+          title: "Logout failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Logged out",
+          description: "You've been successfully logged out.",
+        });
+        navigate("/login");
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -47,19 +115,35 @@ const Profile = () => {
       <main className="px-6 py-6 space-y-6">
         {/* Account Info */}
         <div className="bg-card rounded-ios-lg shadow-ios p-6">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="w-16 h-16 rounded-full bg-foreground text-background flex items-center justify-center text-2xl font-bold">
-              JD
+          {isLoading ? (
+            <div className="animate-pulse space-y-4">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-full bg-muted"></div>
+                <div className="space-y-2 flex-1">
+                  <div className="h-6 bg-muted rounded w-32"></div>
+                  <div className="h-4 bg-muted rounded w-48"></div>
+                </div>
+              </div>
             </div>
-            <div>
-              <h2 className="text-xl font-bold">John Doe</h2>
-              <p className="text-sm text-muted-foreground">john@example.com</p>
-            </div>
-          </div>
-          <div className="pt-4 border-t border-border space-y-2">
-            <p className="text-sm text-muted-foreground">Phone</p>
-            <p className="font-medium">+1 234 567 8900</p>
-          </div>
+          ) : profile ? (
+            <>
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-16 h-16 rounded-full bg-foreground text-background flex items-center justify-center text-2xl font-bold">
+                  {profile.full_name?.charAt(0).toUpperCase() || profile.email.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold">{profile.full_name || "User"}</h2>
+                  <p className="text-sm text-muted-foreground">{profile.email}</p>
+                </div>
+              </div>
+              <div className="pt-4 border-t border-border space-y-2">
+                <p className="text-sm text-muted-foreground">Phone</p>
+                <p className="font-medium">{profile.phone || "Not provided"}</p>
+              </div>
+            </>
+          ) : (
+            <p className="text-muted-foreground">Failed to load profile</p>
+          )}
         </div>
 
         {/* Theme Settings */}
