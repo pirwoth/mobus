@@ -1,0 +1,47 @@
+<?php
+session_start();
+
+function isLoggedIn()
+{
+    return isset($_SESSION['user_id']);
+}
+
+function checkRole($requiredRole)
+{
+    if (!isLoggedIn()) {
+        header("Location: /login.php");
+        exit();
+    }
+
+    if ($_SESSION['role'] !== $requiredRole) {
+        // Redirect unauthorized users to their appropriate dashboard if logged in,
+        // or just a general access denied page.
+        // For simplicity, we redirect to login to reset their session or handle it there.
+        // Better logic: redirect based on their actual role.
+        redirectUserToDashboard($_SESSION['role']);
+        exit();
+    }
+}
+
+function redirectUserToDashboard($role)
+{
+    switch ($role) {
+        case 'admin':
+            header("Location: /admin/dashboard.php");
+            break;
+        case 'operator':
+            header("Location: /operator/dashboard.php");
+            break;
+        case 'passenger':
+            header("Location: /passenger/app.php");
+            break;
+        case 'verifier':
+            header("Location: /verifier/app.php");
+            break;
+        default:
+            header("Location: /login.php");
+            break;
+    }
+    exit();
+}
+?>
