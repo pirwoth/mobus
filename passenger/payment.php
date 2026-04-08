@@ -89,112 +89,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Secure Checkout - Bus Ticket System</title>
-    <style>
-        body {
-            font-family: sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f8f9fa;
-        }
-
-        .header {
-            background: #007bff;
-            color: white;
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .content {
-            padding: 40px 20px;
-            max-width: 500px;
-            margin: auto;
-        }
-
-        .checkout-box {
-            background: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .checkout-box h3 {
-            margin-top: 0;
-            text-align: center;
-            color: #333;
-        }
-
-        .amount-display {
-            text-align: center;
-            font-size: 24px;
-            font-weight: bold;
-            margin: 20px 0;
-            color: #28a745;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-            color: #555;
-        }
-
-        select,
-        input[type="text"] {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            box-sizing: border-box;
-            font-size: 16px;
-        }
-
-        button {
-            width: 100%;
-            padding: 15px;
-            background: #28a745;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 18px;
-            font-weight: bold;
-        }
-
-        button:hover {
-            background: #218838;
-        }
-
-        .error {
-            color: red;
-            margin-bottom: 15px;
-            font-weight: bold;
-            text-align: center;
-        }
-
-        .success {
-            color: green;
-            margin-bottom: 15px;
-            font-weight: bold;
-            background: #d4edda;
-            padding: 20px;
-            border-radius: 5px;
-            text-align: center;
-            line-height: 1.5;
-        }
-
-        .back-link {
-            display: inline-block;
-            margin-bottom: 20px;
-            text-decoration: none;
-            color: #007bff;
-        }
-    </style>
+    
+    <link rel="stylesheet" href="<?= BASE_URL ?>/css/style.css">
+    <script>
+        (function(){var t=localStorage.getItem("mobus_theme")||"dark";
+        document.documentElement.setAttribute("data-theme",t);})();
+    </script>
 </head>
 
 <body>
@@ -203,7 +103,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div>
             Hi,
             <?= htmlspecialchars($_SESSION['name'])?> |
-            <a href="/logout.php" style="color: white;">Logout</a>
+            <span class="nav-divider"></span>
+            <a href="<?= BASE_URL ?>/logout.php" class="nav-logout">Logout</a>
         </div>
     </div>
 
@@ -255,6 +156,7 @@ else: ?>
         <?php
 endif; ?>
     </div>
+    <script src="<?= BASE_URL ?>/js/mobus-theme.js"></script>
 </body>
 
 </html>

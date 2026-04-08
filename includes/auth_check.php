@@ -9,7 +9,7 @@ function isLoggedIn()
 function checkRole($requiredRole)
 {
     if (!isLoggedIn()) {
-        header("Location: /login.php");
+        header("Location: " . BASE_URL . "/login.php");
         exit();
     }
 
@@ -27,19 +27,19 @@ function redirectUserToDashboard($role)
 {
     switch ($role) {
         case 'admin':
-            header("Location: /admin/dashboard.php");
+            header("Location: " . BASE_URL . "/admin/dashboard.php");
             break;
         case 'operator':
-            header("Location: /operator/dashboard.php");
+            header("Location: " . BASE_URL . "/operator/dashboard.php");
             break;
         case 'passenger':
-            header("Location: /passenger/app.php");
+            header("Location: " . BASE_URL . "/passenger/app.php");
             break;
         case 'verifier':
-            header("Location: /verifier/app.php");
+            header("Location: " . BASE_URL . "/verifier/app.php");
             break;
         default:
-            header("Location: /login.php");
+            header("Location: " . BASE_URL . "/login.php");
             break;
     }
     exit();

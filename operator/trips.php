@@ -25,103 +25,23 @@ $trips = $stmt->fetchAll();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Operator Dashboard - Manage Trips</title>
-    <style>
-        body {
-            font-family: sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #e9ecef;
-        }
-
-        .header {
-            background: #17a2b8;
-            color: white;
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .nav-links a {
-            color: white;
-            text-decoration: none;
-            margin-left: 15px;
-        }
-
-        .nav-links a:hover {
-            text-decoration: underline;
-        }
-
-        .content {
-            padding: 20px;
-            max-width: 1100px;
-            margin: auto;
-            background: white;
-            margin-top: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-
-        table,
-        th,
-        td {
-            border: 1px solid #dee2e6;
-        }
-
-        th,
-        td {
-            padding: 12px;
-            text-align: left;
-        }
-
-        th {
-            background-color: #f8f9fa;
-        }
-
-        .btn {
-            padding: 8px 12px;
-            text-decoration: none;
-            border-radius: 4px;
-            color: white;
-            display: inline-block;
-            font-size: 14px;
-        }
-
-        .btn-add {
-            background: #28a745;
-            margin-bottom: 15px;
-        }
-
-        .btn-edit {
-            background: #ffc107;
-            color: black;
-        }
-
-        .btn-delete {
-            background: #dc3545;
-        }
-
-        .actions {
-            white-space: nowrap;
-        }
-    </style>
+    
+    <link rel="stylesheet" href="<?= BASE_URL ?>/css/style.css">
+    <script>
+        (function(){var t=localStorage.getItem("mobus_theme")||"dark";
+        document.documentElement.setAttribute("data-theme",t);})();
+    </script>
 </head>
 
 <body>
     <div class="header">
         <h2>Bus Ticket System - Operator</h2>
         <div class="nav-links">
-            <a href="dashboard.php">Manage Buses</a>
-            <a href="trips.php" style="font-weight: bold; text-decoration: underline;">Manage Trips</a>
-            <a href="/logout.php">Logout (
-                <?= htmlspecialchars($_SESSION['name'])?>)
-            </a>
+            <a href="dashboard.php" >Manage Buses</a>
+            <a href="trips.php" class="active">Manage Trips</a>
+            <a href="routes.php" >Manage Routes</a>
+            <span class="nav-divider"></span>
+            <a href="<?= BASE_URL?>/logout.php"  class="nav-logout">Logout &mdash; <?= htmlspecialchars($_SESSION['name'])?></a>
         </div>
     </div>
     <div class="content">
@@ -129,7 +49,7 @@ $trips = $stmt->fetchAll();
         <a href="add_trip.php" class="btn btn-add">+ Schedule New Trip</a>
 
         <?php if (isset($_GET['msg'])): ?>
-        <div style="background: #d4edda; color: #155724; padding: 10px; margin-bottom: 15px; border-radius: 4px;">
+        <div class="msg-success">
             <?= htmlspecialchars($_GET['msg'])?>
         </div>
         <?php
@@ -187,6 +107,7 @@ else: ?>
         <?php
 endif; ?>
     </div>
+    <script src="<?= BASE_URL ?>/js/mobus-theme.js"></script>
 </body>
 
 </html>

@@ -12,8 +12,9 @@ $stmt = $pdo->prepare("SELECT id, bus_name, bus_number FROM buses WHERE created_
 $stmt->execute([$operator_id]);
 $buses = $stmt->fetchAll();
 
-// Fetch all routes
-$routes_stmt = $pdo->query("SELECT id, origin, destination FROM routes ORDER BY origin ASC");
+// Fetch global routes and operator's routes
+$routes_stmt = $pdo->prepare("SELECT id, origin, destination FROM routes WHERE created_by_operator = ? OR created_by_operator IS NULL ORDER BY origin ASC");
+$routes_stmt->execute([$operator_id]);
 $routes = $routes_stmt->fetchAll();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -27,7 +28,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = "All fields are required and price must be greater than 0.";
     }
     else {
-        // Verify the bus exists and belongs to this operator to prevent assigning a trip to someone else's bus
         $busCheck = $pdo->prepare("SELECT id FROM buses WHERE id = ? AND created_by_operator = ?");
         $busCheck->execute([$bus_id, $operator_id]);
         if (!$busCheck->fetch()) {
@@ -53,139 +53,83 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Schedule Trip</title>
-    <style>
-        body {
-            font-family: sans-serif;
-            background-color: #e9ecef;
-            display: flex;
-            justify-content: center;
-            padding-top: 50px;
-            margin: 0;
-        }
-
-        .container {
-            background: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 500px;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-        }
-
-        input,
-        select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            box-sizing: border-box;
-        }
-
-        button {
-            width: 100%;
-            padding: 10px;
-            background: #28a745;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            margin-top: 10px;
-        }
-
-        button:hover {
-            background: #218838;
-        }
-
-        .error {
-            color: red;
-            margin-bottom: 15px;
-        }
-
-        .back-link {
-            display: block;
-            margin-bottom: 20px;
-            color: #007bff;
-            text-decoration: none;
-        }
-    </style>
+    <title>Schedule Trip - Operator</title>
+    <link rel="stylesheet" href="<?= BASE_URL ?>/css/style.css">
+    <script>
+        (function(){var t=localStorage.getItem("mobus_theme")||"dark";
+        document.documentElement.setAttribute("data-theme",t);})();
+    </script>
 </head>
 
 <body>
-    <div class="container">
-        <a href="trips.php" class="back-link">&larr; Back to Trips List</a>
-        <h2>Schedule New Trip</h2>
-
-        <?php if ($error): ?>
-        <div class="error">
-            <?= htmlspecialchars($error)?>
+    <div class="header">
+        <h2>Bus Ticket System &mdash; Operator</h2>
+        <div class="nav-links">
+            <a href="dashboard.php">Manage Buses</a>
+            <a href="trips.php" class="active">Manage Trips</a>
+            <a href="routes.php">Manage Routes</a>
+            <span class="nav-divider"></span>
+            <a href="<?= BASE_URL ?>/logout.php" class="nav-logout">Logout &mdash; <?= htmlspecialchars($_SESSION['name']) ?></a>
         </div>
-        <?php
-endif; ?>
-
-        <?php if (count($buses) === 0): ?>
-        <div class="error">You must add a bus first before scheduling a trip.</div>
-        <a href="add_bus.php" class="back-link">Go add a bus</a>
-        <?php
-elseif (count($routes) === 0): ?>
-        <div class="error">No routes are defined in the system. Please contact the administrator to define routes in the
-            database.</div>
-        <?php
-else: ?>
-        <form method="POST">
-            <div class="form-group">
-                <label>Select Bus</label>
-                <select name="bus_id" required>
-                    <option value="">-- Choose a bus --</option>
-                    <?php foreach ($buses as $bus): ?>
-                    <option value="<?= $bus['id']?>">
-                        <?= htmlspecialchars($bus['bus_name'])?> (
-                        <?= htmlspecialchars($bus['bus_number'])?>)
-                    </option>
-                    <?php
-    endforeach; ?>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Select Route</label>
-                <select name="route_id" required>
-                    <option value="">-- Choose a route --</option>
-                    <?php foreach ($routes as $route): ?>
-                    <option value="<?= $route['id']?>">
-                        <?= htmlspecialchars($route['origin'])?> to
-                        <?= htmlspecialchars($route['destination'])?>
-                    </option>
-                    <?php
-    endforeach; ?>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Travel Date</label>
-                <input type="date" name="travel_date" required>
-            </div>
-            <div class="form-group">
-                <label>Departure Time</label>
-                <input type="time" name="departure_time" required>
-            </div>
-            <div class="form-group">
-                <label>Ticket Price</label>
-                <input type="number" step="0.01" name="price" min="1" required>
-            </div>
-            <button type="submit">Schedule Trip</button>
-        </form>
-        <?php
-endif; ?>
     </div>
+
+    <div class="content">
+        <a href="trips.php" class="back-link">&larr; Back to Trips List</a>
+        <div class="form-page-grid">
+            <div class="panel">
+                <h3>Schedule New Trip</h3>
+                <p class="form-desc">Assign a bus to a route with a travel date, departure time, and ticket price.</p>
+
+                <?php if ($error): ?>
+                <div class="error"><?= htmlspecialchars($error) ?></div>
+                <?php endif; ?>
+
+                <?php if (count($buses) === 0): ?>
+                <div class="error">You must add a bus first before scheduling a trip.</div>
+                <a href="add_bus.php" class="back-link">Go add a bus &rarr;</a>
+                <?php elseif (count($routes) === 0): ?>
+                <div class="error">No routes are defined. Please contact the administrator to define routes.</div>
+                <?php else: ?>
+                <form method="POST">
+                    <div class="form-group">
+                        <label>Select Bus</label>
+                        <select name="bus_id" required>
+                            <option value="">-- Choose a bus --</option>
+                            <?php foreach ($buses as $bus): ?>
+                            <option value="<?= $bus['id'] ?>"><?= htmlspecialchars($bus['bus_name']) ?> (<?= htmlspecialchars($bus['bus_number']) ?>)</option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Select Route</label>
+                        <select name="route_id" required>
+                            <option value="">-- Choose a route --</option>
+                            <?php foreach ($routes as $route): ?>
+                            <option value="<?= $route['id'] ?>"><?= htmlspecialchars($route['origin']) ?> to <?= htmlspecialchars($route['destination']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Travel Date</label>
+                            <input type="date" name="travel_date" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Departure Time</label>
+                            <input type="time" name="departure_time" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Ticket Price (UGX)</label>
+                        <input type="number" step="0.01" name="price" min="1" placeholder="e.g. 25000" required>
+                    </div>
+                    <button type="submit" class="btn-form-submit">Schedule Trip</button>
+                </form>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+    <script src="<?= BASE_URL ?>/js/mobus-theme.js"></script>
 </body>
 
 </html>

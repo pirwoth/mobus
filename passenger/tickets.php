@@ -28,81 +28,12 @@ $tickets = $stmt->fetchAll();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Tickets - Bus Ticket System</title>
-    <style>
-        body {
-            font-family: sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f8f9fa;
-        }
-
-        .header {
-            background: #007bff;
-            color: white;
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .content {
-            padding: 20px;
-            max-width: 900px;
-            margin: auto;
-        }
-
-        a.logout {
-            color: white;
-            text-decoration: underline;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-            background: white;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-
-        th,
-        td {
-            padding: 15px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-
-        th {
-            background: #f1f1f1;
-        }
-
-        .btn-view {
-            background: #17a2b8;
-            color: white;
-            padding: 8px 12px;
-            text-decoration: none;
-            border-radius: 4px;
-            font-size: 14px;
-        }
-
-        .btn-view:hover {
-            background: #138496;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 15px;
-        }
-
-        .nav-link {
-            color: white;
-            text-decoration: none;
-            font-weight: bold;
-        }
-
-        .nav-link:hover {
-            text-decoration: underline;
-        }
-    </style>
+    
+    <link rel="stylesheet" href="<?= BASE_URL ?>/css/style.css">
+    <script>
+        (function(){var t=localStorage.getItem("mobus_theme")||"dark";
+        document.documentElement.setAttribute("data-theme",t);})();
+    </script>
 </head>
 
 <body>
@@ -110,12 +41,13 @@ $tickets = $stmt->fetchAll();
         <h2>Bus Ticket System - App</h2>
         <div class="nav-links">
             <a href="app.php" class="nav-link">Search</a>
-            <a href="tickets.php" class="nav-link" style="text-decoration: underline;">My Tickets</a>
+            <a href="tickets.php" class="nav-link" >My Tickets</a>
         </div>
         <div>
             Hi,
             <?= htmlspecialchars($_SESSION['name'])?> |
-            <a href="/logout.php" class="logout">Logout</a>
+            <span class="nav-divider"></span>
+            <a href="<?= BASE_URL ?>/logout.php" class="nav-logout">Logout</a>
         </div>
     </div>
 
@@ -165,6 +97,7 @@ else: ?>
         <?php
 endif; ?>
     </div>
+    <script src="<?= BASE_URL ?>/js/mobus-theme.js"></script>
 </body>
 
 </html>

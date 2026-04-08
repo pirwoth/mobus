@@ -43,118 +43,12 @@ if (!$ticket) {
     <title>Digital Ticket -
         <?= htmlspecialchars($ticket['ticket_number'])?>
     </title>
-    <style>
-        body {
-            font-family: sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f8f9fa;
-        }
-
-        .header {
-            background: #007bff;
-            color: white;
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .content {
-            padding: 40px 20px;
-            max-width: 600px;
-            margin: auto;
-        }
-
-        a.logout {
-            color: white;
-            text-decoration: underline;
-        }
-
-        .ticket-card {
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            border-top: 8px solid #007bff;
-        }
-
-        .ticket-header {
-            text-align: center;
-            margin-bottom: 25px;
-            border-bottom: 2px dashed #eee;
-            padding-bottom: 20px;
-        }
-
-        .ticket-header h1 {
-            margin: 0;
-            color: #333;
-            font-size: 28px;
-        }
-
-        .ticket-header p {
-            margin: 5px 0 0 0;
-            color: #777;
-            font-size: 16px;
-        }
-
-        .ticket-details {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .detail-group {
-            margin-bottom: 10px;
-        }
-
-        .detail-label {
-            font-size: 12px;
-            color: #888;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .detail-value {
-            font-size: 18px;
-            font-weight: bold;
-            color: #333;
-            margin-top: 4px;
-        }
-
-        .qr-section {
-            text-align: center;
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 2px dashed #eee;
-        }
-
-        .qr-code {
-            width: 150px;
-            height: 150px;
-            margin: 0 auto 10px auto;
-            display: block;
-        }
-
-        .back-link {
-            display: inline-block;
-            margin-bottom: 20px;
-            text-decoration: none;
-            color: #007bff;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 15px;
-        }
-
-        .nav-link {
-            color: white;
-            text-decoration: none;
-            font-weight: bold;
-        }
-    </style>
+    
+    <link rel="stylesheet" href="<?= BASE_URL ?>/css/style.css">
+    <script>
+        (function(){var t=localStorage.getItem("mobus_theme")||"dark";
+        document.documentElement.setAttribute("data-theme",t);})();
+    </script>
 </head>
 
 <body>
@@ -167,7 +61,8 @@ if (!$ticket) {
         <div>
             Hi,
             <?= htmlspecialchars($_SESSION['name'])?> |
-            <a href="/logout.php" class="logout">Logout</a>
+            <span class="nav-divider"></span>
+            <a href="<?= BASE_URL ?>/logout.php" class="nav-logout">Logout</a>
         </div>
     </div>
 
@@ -237,6 +132,7 @@ if (!$ticket) {
             </div>
         </div>
     </div>
+    <script src="<?= BASE_URL ?>/js/mobus-theme.js"></script>
 </body>
 
 </html>

@@ -67,137 +67,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <title>Ticket Verification - Bus Ticket System</title>
     <!-- Include html5-qrcode library -->
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-    <style>
-        body {
-            font-family: sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f8f9fa;
-        }
-
-        .header {
-            background: #343a40;
-            color: white;
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .content {
-            padding: 20px;
-            max-width: 600px;
-            margin: auto;
-        }
-
-        a.logout {
-            color: white;
-            text-decoration: underline;
-        }
-
-        .panel {
-            background: white;
-            padding: 25px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
-        }
-
-        .panel h3 {
-            margin-top: 0;
-            text-align: center;
-        }
-
-        input[type="text"] {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            box-sizing: border-box;
-            font-size: 16px;
-            margin-bottom: 15px;
-        }
-
-        button {
-            width: 100%;
-            padding: 12px;
-            background: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-        }
-
-        button:hover {
-            background: #0056b3;
-        }
-
-        .result-box {
-            text-align: center;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            color: white;
-            font-weight: bold;
-            font-size: 24px;
-        }
-
-        .result-valid {
-            background: #28a745;
-        }
-
-        .result-used {
-            background: #ffc107;
-            color: black;
-        }
-
-        .result-invalid {
-            background: #dc3545;
-        }
-
-        .ticket-details {
-            border: 1px solid #eee;
-            padding: 15px;
-            border-radius: 5px;
-            background: #fafafa;
-        }
-
-        .detail-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px dashed #ddd;
-        }
-
-        .detail-row:last-child {
-            border-bottom: none;
-        }
-
-        .detail-label {
-            color: #666;
-            font-size: 14px;
-        }
-
-        .detail-value {
-            font-weight: bold;
-            color: #333;
-        }
-
-        #reader {
-            width: 100%;
-            max-width: 500px;
-            margin: 0 auto 20px auto;
-        }
-
-        .divider {
-            text-align: center;
-            margin: 20px 0;
-            color: #888;
-            font-weight: bold;
-        }
-    </style>
+    
+    <link rel="stylesheet" href="<?= BASE_URL ?>/css/style.css">
+    <script>
+        (function(){var t=localStorage.getItem("mobus_theme")||"dark";
+        document.documentElement.setAttribute("data-theme",t);})();
+    </script>
 </head>
 
 <body>
@@ -206,7 +81,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div>
             Hi,
             <?= htmlspecialchars($_SESSION['name'])?> |
-            <a href="/logout.php" class="logout">Logout</a>
+            <span class="nav-divider"></span>
+            <a href="<?= BASE_URL ?>/logout.php" class="nav-logout">Logout</a>
         </div>
     </div>
 
@@ -312,6 +188,7 @@ else: ?>
         <?php
 endif; ?>
     </div>
+    <script src="<?= BASE_URL ?>/js/mobus-theme.js"></script>
 </body>
 
 </html>

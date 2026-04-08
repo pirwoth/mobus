@@ -6,10 +6,10 @@ checkRole('operator');
 
 $operator_id = $_SESSION['user_id'];
 
-// Fetch buses for this operator
-$stmt = $pdo->prepare("SELECT * FROM buses WHERE created_by_operator = ? ORDER BY created_at DESC");
+// Fetch routes for this operator and global routes
+$stmt = $pdo->prepare("SELECT * FROM routes WHERE created_by_operator = ? OR created_by_operator IS NULL ORDER BY origin ASC");
 $stmt->execute([$operator_id]);
-$buses = $stmt->fetchAll();
+$routes = $stmt->fetchAll();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -17,7 +17,7 @@ $buses = $stmt->fetchAll();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Operator Dashboard - Manage Buses</title>
+    <title>Manage Routes - Operator</title>
     
     <link rel="stylesheet" href="<?= BASE_URL ?>/css/style.css">
     <script>
@@ -30,17 +30,17 @@ $buses = $stmt->fetchAll();
     <div class="header">
         <h2>Bus Ticket System - Operator</h2>
         <div class="nav-links">
-            <a href="dashboard.php" class="active">Manage
-                Buses</a>
+            <a href="dashboard.php" >Manage Buses</a>
             <a href="trips.php" >Manage Trips</a>
-            <a href="routes.php" >Manage Routes</a>
+            <a href="routes.php" class="active">Manage Routes</a>
             <span class="nav-divider"></span>
             <a href="<?= BASE_URL?>/logout.php"  class="nav-logout">Logout &mdash; <?= htmlspecialchars($_SESSION['name'])?></a>
         </div>
     </div>
+
     <div class="content">
-        <h3>Manage Buses</h3>
-        <a href="add_bus.php" class="btn btn-add">+ Add New Bus</a>
+        <h3>Manage Routes</h3>
+        <a href="add_route.php" class="btn btn-add">+ Add New Route</a>
 
         <?php if (isset($_GET['msg'])): ?>
         <div class="msg-success">
@@ -49,40 +49,47 @@ $buses = $stmt->fetchAll();
         <?php
 endif; ?>
 
-        <?php if (count($buses) > 0): ?>
+        <?php if (count($routes) > 0): ?>
         <table>
             <thead>
                 <tr>
                     <th>ID</th>
-                    <th>Bus Name</th>
-                    <th>Bus Number</th>
-                    <th>Total Seats</th>
-                    <th>Created At</th>
+                    <th>Origin</th>
+                    <th>Destination</th>
+                    <th>Type</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($buses as $bus): ?>
+                <?php foreach ($routes as $route): ?>
                 <tr>
                     <td>
-                        <?= $bus['id']?>
+                        <?= $route['id']?>
                     </td>
                     <td>
-                        <?= htmlspecialchars($bus['bus_name'])?>
+                        <?= htmlspecialchars($route['origin'])?>
                     </td>
                     <td>
-                        <?= htmlspecialchars($bus['bus_number'])?>
+                        <?= htmlspecialchars($route['destination'])?>
                     </td>
                     <td>
-                        <?= $bus['total_seats']?>
+                        <?php if ($route['created_by_operator'] === null): ?>
+                        <span class="global-badge">Global (Admin)</span>
+                        <?php
+        else: ?>
+                        Local (Yours)
+                        <?php
+        endif; ?>
                     </td>
                     <td>
-                        <?= $bus['created_at']?>
-                    </td>
-                    <td class="actions">
-                        <a href="edit_bus.php?id=<?= $bus['id']?>" class="btn btn-edit">Edit</a>
-                        <a href="delete_bus.php?id=<?= $bus['id']?>" class="btn btn-delete"
-                            onclick="return confirm('Are you sure you want to delete this bus?');">Delete</a>
+                        <?php if ($route['created_by_operator'] == $operator_id): ?>
+                        <a href="delete_route.php?id=<?= $route['id']?>" class="btn btn-delete"
+                            onclick="return confirm('Delete this route? Trips using this route will ALSO be deleted!');">Delete</a>
+                        <?php
+        else: ?>
+                        <span style="color: #999; font-size: 12px;">No Actions</span>
+                        <?php
+        endif; ?>
                     </td>
                 </tr>
                 <?php
@@ -91,7 +98,7 @@ endif; ?>
         </table>
         <?php
 else: ?>
-        <p>No buses found. Please add a bus.</p>
+        <p>No routes found. Please add a route.</p>
         <?php
 endif; ?>
     </div>

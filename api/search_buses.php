@@ -15,6 +15,7 @@ if (empty($origin) || empty($destination) || empty($travel_date)) {
 try {
     $stmt = $pdo->prepare("
         SELECT 
+            t.id AS 'Trip ID',
             b.bus_name AS 'Bus Name',
             b.bus_number AS 'Bus Number',
             t.departure_time AS 'Departure Time',

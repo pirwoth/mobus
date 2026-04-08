@@ -1,45 +1,64 @@
 <?php
 require_once 'config/db.php';
-session_start();
+require_once 'includes/auth_check.php';
 
 if (isset($_SESSION['user_id'])) {
-    header("Location: /"); // or dashboard redirect
-    exit;
+    redirectUserToDashboard($_SESSION['role']);
 }
 
 $error = '';
 $success = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $name = trim($_POST['name']);
-    $email = trim($_POST['email']);
-    $phone = trim($_POST['phone']);
-    $password = $_POST['password'];
-    $role = $_POST['role'];
+    $name = trim($_POST['name'] ?? '');
+    $email = trim($_POST['email'] ?? '');
+    $phone = trim($_POST['phone'] ?? '');
+    $password = $_POST['password'] ?? '';
+    $confirm_password = $_POST['confirm_password'] ?? '';
 
-    // Basic validation
-    if (empty($name) || empty($email) || empty($password) || empty($role) || empty($phone)) {
+    // Advanced Validations
+    if (empty($name) || empty($email) || empty($phone) || empty($password) || empty($confirm_password)) {
         $error = "All fields are required.";
     }
+    elseif (strlen($name) < 3 || strlen($name) > 100 || !preg_match("/^[a-zA-Z\s]+$/", $name)) {
+        $error = "Full Name must be 3-100 characters containing only letters and spaces.";
+    }
+    elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $error = "Please enter a valid email address.";
+    }
+    elseif (!preg_match("/^[0-9]{10,15}$/", $phone)) {
+        $error = "Phone strictly must be 10-15 digits.";
+    }
+    elseif (strlen($password) < 8 || !preg_match("/[a-zA-Z]/", $password) || !preg_match("/[0-9]/", $password) || !preg_match("/[^a-zA-Z0-9]/", $password)) {
+        $error = "Password must be at least 8 characters and include a letter, number, and special character.";
+    }
+    elseif ($password !== $confirm_password) {
+        $error = "Passwords do not match.";
+    }
     else {
-        // Check if email already exists
-        $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
-        $stmt->execute([$email]);
-        if ($stmt->fetch()) {
-            $error = "Email is already registered.";
+        $email = strtolower($email);
+
+        // Uniqueness check (Email & Phone)
+        $checkStmt = $pdo->prepare("SELECT id FROM users WHERE email = ? OR phone = ?");
+        $checkStmt->execute([$email, $phone]);
+        if ($checkStmt->fetch()) {
+            $error = "An account with that email or phone number already exists.";
         }
         else {
-            // Hash password
+            // Hash password and generate 6-digit code
             $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+            $verification_code = sprintf("%06d", mt_rand(1, 999999));
+            $role = 'passenger'; // Forced to passenger
 
-            // Insert new user
-            $stmt = $pdo->prepare("INSERT INTO users (name, email, phone, password, role) VALUES (?, ?, ?, ?, ?)");
+            $stmt = $pdo->prepare("INSERT INTO users (name, email, phone, password, role, is_verified, verification_code) VALUES (?, ?, ?, ?, ?, 0, ?)");
             try {
-                $stmt->execute([$name, $email, $phone, $hashedPassword, $role]);
-                $success = "Registration successful. You can now login.";
+                $stmt->execute([$name, $email, $phone, $hashedPassword, $role, $verification_code]);
+                // Automatically redirect to verification page, passing email
+                header("Location: verify.php?email=" . urlencode($email));
+                exit;
             }
             catch (PDOException $e) {
-                $error = "Error during registration.";
+                $error = "Error during registration. Ensure data is unique.";
             }
         }
     }
@@ -51,125 +70,91 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register - Bus Ticket System</title>
-    <style>
-        body {
-            font-family: sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #f4f4f4;
-            margin: 0;
-        }
-
-        .container {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 400px;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-        }
-
-        input[type="text"],
-        input[type="email"],
-        input[type="password"],
-        select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            box-sizing: border-box;
-        }
-
-        button {
-            width: 100%;
-            padding: 10px;
-            background: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-
-        button:hover {
-            background: #0056b3;
-        }
-
-        .error {
-            color: red;
-            margin-bottom: 15px;
-        }
-
-        .success {
-            color: green;
-            margin-bottom: 15px;
-        }
-
-        a {
-            color: #007bff;
-            text-decoration: none;
-        }
-    </style>
+    <title>Passenger Registration - Bus Ticket System</title>
+    
+    <link rel="stylesheet" href="<?= BASE_URL ?>/css/style.css">
+    <script>
+        (function(){var t=localStorage.getItem("mobus_theme")||"dark";
+        document.documentElement.setAttribute("data-theme",t);})();
+    </script>
 </head>
 
 <body>
-    <div class="container">
-        <h2>Register</h2>
+    <div class="auth-container">
+        <div class="container">
+        <h2>Create an Account</h2>
         <?php if ($error): ?>
         <div class="error">
             <?= htmlspecialchars($error)?>
         </div>
         <?php
 endif; ?>
-        <?php if ($success): ?>
-        <div class="success">
-            <?= htmlspecialchars($success)?>
-        </div>
-        <?php
-endif; ?>
 
-        <form method="POST" action="">
+        <form method="POST">
             <div class="form-group">
-                <label>Name</label>
-                <input type="text" name="name" required>
+                <label>Full Name</label>
+                <input type="text" name="name" value="<?= htmlspecialchars($_POST['name'] ?? '')?>" required>
+                <div class="hint">3-100 characters, letters only.</div>
             </div>
             <div class="form-group">
-                <label>Email</label>
-                <input type="email" name="email" required>
+                <label>Email Address</label>
+                <input type="email" name="email" value="<?= htmlspecialchars($_POST['email'] ?? '')?>" required>
             </div>
             <div class="form-group">
-                <label>Phone</label>
-                <input type="text" name="phone" required>
+                <label>Phone Number</label>
+                <input type="text" name="phone" value="<?= htmlspecialchars($_POST['phone'] ?? '')?>" required>
+                <div class="hint">10-15 digits. No spaces or dashes.</div>
             </div>
             <div class="form-group">
                 <label>Password</label>
-                <input type="password" name="password" required>
+                <div style="position: relative;">
+                    <input type="password" name="password" id="reg_password" required>
+                    <span class="toggle-password" onclick="togglePassword('reg_password', this)">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            class="feather feather-eye">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                    </span>
+                </div>
+                <div class="hint">Min 8 chars: 1 letter, 1 number, 1 special char.</div>
             </div>
             <div class="form-group">
-                <label>Role</label>
-                <select name="role" required>
-                    <option value="passenger">Passenger</option>
-                    <option value="admin">Super Admin</option>
-                    <option value="operator">Operator</option>
-                    <option value="verifier">Ticket Verifier</option>
-                </select>
+                <label>Confirm Password</label>
+                <div style="position: relative;">
+                    <input type="password" name="confirm_password" id="reg_confirm" required>
+                    <span class="toggle-password" onclick="togglePassword('reg_confirm', this)">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            class="feather feather-eye">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                    </span>
+                </div>
             </div>
-            <button type="submit">Register</button>
+            <button type="submit">Sign Up</button>
         </form>
-        <p style="text-align: center; margin-top: 15px;">Already have an account? <a href="login.php">Login</a></p>
+        <p style="text-align: center; margin-top: 20px;">Already have an account? <a href="login.php">Log In</a></p>
     </div>
+
+    <script>
+        function togglePassword(inputId, iconSpan) {
+            const input = document.getElementById(inputId);
+            const svg = iconSpan.querySelector('svg');
+
+            if (input.type === 'password') {
+                input.type = 'text';
+                svg.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
+            } else {
+                input.type = 'password';
+                svg.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
+            }
+        }
+    </script>
+    </div>
+    <script src="<?= BASE_URL ?>/js/mobus-theme.js"></script>
 </body>
 
 </html>

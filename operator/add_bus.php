@@ -42,102 +42,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add Bus</title>
-    <style>
-        body {
-            font-family: sans-serif;
-            background-color: #e9ecef;
-            display: flex;
-            justify-content: center;
-            padding-top: 50px;
-            margin: 0;
-        }
-
-        .container {
-            background: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 400px;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-        }
-
-        input[type="text"],
-        input[type="number"] {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            box-sizing: border-box;
-        }
-
-        button {
-            width: 100%;
-            padding: 10px;
-            background: #28a745;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            margin-top: 10px;
-        }
-
-        button:hover {
-            background: #218838;
-        }
-
-        .error {
-            color: red;
-            margin-bottom: 15px;
-        }
-
-        .back-link {
-            display: block;
-            margin-bottom: 20px;
-            color: #007bff;
-            text-decoration: none;
-        }
-    </style>
+    <title>Add Bus - Operator</title>
+    <link rel="stylesheet" href="<?= BASE_URL ?>/css/style.css">
+    <script>
+        (function(){var t=localStorage.getItem("mobus_theme")||"dark";
+        document.documentElement.setAttribute("data-theme",t);})();
+    </script>
 </head>
 
 <body>
-    <div class="container">
-        <a href="dashboard.php" class="back-link">&larr; Back to Dashboard</a>
-        <h2>Add New Bus</h2>
-
-        <?php if ($error): ?>
-        <div class="error">
-            <?= htmlspecialchars($error)?>
+    <div class="header">
+        <h2>Bus Ticket System &mdash; Operator</h2>
+        <div class="nav-links">
+            <a href="dashboard.php" class="active">Manage Buses</a>
+            <a href="trips.php">Manage Trips</a>
+            <a href="routes.php">Manage Routes</a>
+            <span class="nav-divider"></span>
+            <a href="<?= BASE_URL ?>/logout.php" class="nav-logout">Logout &mdash; <?= htmlspecialchars($_SESSION['name']) ?></a>
         </div>
-        <?php
-endif; ?>
-
-        <form method="POST">
-            <div class="form-group">
-                <label>Bus Name</label>
-                <input type="text" name="bus_name" required>
-            </div>
-            <div class="form-group">
-                <label>Bus Number (e.g., KCA 123A)</label>
-                <input type="text" name="bus_number" required>
-            </div>
-            <div class="form-group">
-                <label>Total Seats</label>
-                <input type="number" name="total_seats" min="1" max="100" required>
-            </div>
-            <button type="submit">Save Bus</button>
-        </form>
     </div>
+
+    <div class="content">
+        <a href="dashboard.php" class="back-link">&larr; Back to Dashboard</a>
+        <div class="form-page-grid">
+            <div class="panel">
+                <h3>Add New Bus</h3>
+                <p class="form-desc">Add a bus to your fleet. Seats will be automatically generated.</p>
+
+                <?php if ($error): ?>
+                <div class="error"><?= htmlspecialchars($error) ?></div>
+                <?php endif; ?>
+
+                <form method="POST">
+                    <div class="form-group">
+                        <label>Bus Name</label>
+                        <input type="text" name="bus_name" placeholder="e.g. YY Coach" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Bus Number (Plate)</label>
+                        <input type="text" name="bus_number" placeholder="e.g. KCA 123A" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Total Seats</label>
+                        <input type="number" name="total_seats" min="1" max="100" placeholder="e.g. 45" required>
+                    </div>
+                    <button type="submit" class="btn-form-submit">Save Bus</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script src="<?= BASE_URL ?>/js/mobus-theme.js"></script>
 </body>
 
 </html>

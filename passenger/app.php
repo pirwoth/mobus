@@ -17,125 +17,26 @@ $destinations = array_unique(array_column($routes, 'destination'));
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Passenger App - Bus Ticket System</title>
-    <style>
-        body {
-            font-family: sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f8f9fa;
-        }
-
-        .header {
-            background: #007bff;
-            color: white;
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .content {
-            padding: 20px;
-            max-width: 900px;
-            margin: auto;
-        }
-
-        a.logout {
-            color: white;
-            text-decoration: underline;
-        }
-
-        .search-box {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            display: flex;
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-
-        .form-group {
-            flex: 1;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-
-        select,
-        input[type="date"] {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            box-sizing: border-box;
-        }
-
-        button {
-            padding: 10px 20px;
-            background: #28a745;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            align-self: flex-end;
-        }
-
-        button:hover {
-            background: #218838;
-        }
-
-        .results {
-            display: grid;
-            gap: 20px;
-        }
-
-        .trip-card {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .trip-details h4 {
-            margin: 0 0 10px 0;
-            color: #333;
-        }
-
-        .trip-details p {
-            margin: 5px 0;
-            color: #555;
-        }
-
-        .btn-book {
-            background: #ffc107;
-            color: black;
-            padding: 10px 15px;
-            text-decoration: none;
-            border-radius: 5px;
-            font-weight: bold;
-        }
-
-        .btn-book:hover {
-            background: #e0a800;
-        }
-    </style>
+    
+    <link rel="stylesheet" href="<?= BASE_URL ?>/css/style.css">
+    <script>
+        (function(){var t=localStorage.getItem("mobus_theme")||"dark";
+        document.documentElement.setAttribute("data-theme",t);})();
+    </script>
 </head>
 
 <body>
     <div class="header">
         <h2>Bus Ticket System - App</h2>
+        <div class="nav-links">
+            <a href="app.php" class="active">Search</a>
+            <a href="tickets.php" >My Tickets</a>
+        </div>
         <div>
             Hi,
             <?= htmlspecialchars($_SESSION['name'])?> |
-            <a href="/logout.php" class="logout">Logout</a>
+            <span class="nav-divider"></span>
+            <a href="<?= BASE_URL?>/logout.php" class="nav-logout">Logout</a>
         </div>
     </div>
     <div class="content">
@@ -222,6 +123,7 @@ endforeach; ?>
                 });
         });
     </script>
+    <script src="<?= BASE_URL ?>/js/mobus-theme.js"></script>
 </body>
 
 </html>
