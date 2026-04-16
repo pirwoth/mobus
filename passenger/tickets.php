@@ -7,18 +7,20 @@ checkRole('passenger');
 $user_id = $_SESSION['user_id'];
 
 // Fetch user's tickets (bookings with 'paid' status)
-$stmt = $pdo->prepare("
-    SELECT tkt.id as ticket_id, b.ticket_number, b.seat_number, 
-           tr.departure_time, tr.travel_date, r.origin, r.destination, b.status
-    FROM tickets tkt
-    JOIN bookings b ON tkt.booking_id = b.id
-    JOIN trips tr ON b.trip_id = tr.id
-    JOIN routes r ON tr.route_id = r.id
-    WHERE b.user_id = ?
-    ORDER BY tr.travel_date DESC, tr.departure_time DESC
-");
-$stmt->execute([$user_id]);
-$tickets = $stmt->fetchAll();
+$sql = "SELECT tkt.id as ticket_id, b.ticket_number, b.seat_number, 
+               tr.departure_time, tr.travel_date, r.origin, r.destination, b.status
+        FROM tickets tkt
+        JOIN bookings b ON tkt.booking_id = b.id
+        JOIN trips tr ON b.trip_id = tr.id
+        JOIN routes r ON tr.route_id = r.id
+        WHERE b.user_id = $user_id
+        ORDER BY tr.travel_date DESC, tr.departure_time DESC";
+
+$result = mysqli_query($conn, $sql);
+$tickets = [];
+while ($row = mysqli_fetch_assoc($result)) {
+    $tickets[] = $row;
+}
 
 ?>
 <!DOCTYPE html>
@@ -27,9 +29,9 @@ $tickets = $stmt->fetchAll();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Tickets - Bus Ticket System</title>
+    <title>My Tickets - Mobus</title>
     
-    <link rel="stylesheet" href="<?= BASE_URL ?>/css/style.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/css/style.css?v=2.0">
     <script>
         (function(){var t=localStorage.getItem("mobus_theme")||"dark";
         document.documentElement.setAttribute("data-theme",t);})();
@@ -38,14 +40,13 @@ $tickets = $stmt->fetchAll();
 
 <body>
     <div class="header">
-        <h2>Bus Ticket System - App</h2>
+        <h2>Bus Ticket System</h2>
         <div class="nav-links">
-            <a href="app.php" class="nav-link">Search</a>
-            <a href="tickets.php" class="nav-link" >My Tickets</a>
+            <a href="app.php" class="active">Find a Bus</a>
+            <a href="tickets.php">My Tickets</a>
         </div>
         <div>
-            Hi,
-            <?= htmlspecialchars($_SESSION['name'])?> |
+            Hi, <?= htmlspecialchars($_SESSION['name'])?> 
             <span class="nav-divider"></span>
             <a href="<?= BASE_URL ?>/logout.php" class="nav-logout">Logout</a>
         </div>
@@ -70,7 +71,7 @@ $tickets = $stmt->fetchAll();
                 <?php foreach ($tickets as $t): ?>
                 <tr>
                     <td>
-                        <?= htmlspecialchars($t['origin'])?> -
+                        <?= htmlspecialchars($t['origin'])?> to
                         <?= htmlspecialchars($t['destination'])?>
                     </td>
                     <td>
@@ -87,17 +88,32 @@ $tickets = $stmt->fetchAll();
                     </td>
                     <td><a href="view_ticket.php?id=<?= $t['ticket_id']?>" class="btn-view">View Ticket</a></td>
                 </tr>
-                <?php
-    endforeach; ?>
+                <?php endforeach; ?>
             </tbody>
         </table>
-        <?php
-else: ?>
-        <p style="text-align: center; color: #777; margin-top: 40px;">You haven't bought any tickets yet.</p>
-        <?php
-endif; ?>
+        <?php else: ?>
+            <p style="text-align: center; color: #777; margin-top: 40px;">You haven't bought any tickets yet.</p>
+        <?php endif; ?>
     </div>
-    <script src="<?= BASE_URL ?>/js/mobus-theme.js"></script>
+    <script src="<?= BASE_URL ?>/js/mobus-theme.js?v=2.0"></script>
 </body>
 
 </html>
+
+<?php
+/**
+ * --- DOCUMENTATION SECTION ---
+ * 
+ * 1. MULTI-LEVEL JOIN:
+ * To show a single ticket, we need information from four different tables: 
+ * tickets, bookings, trips, and routes. We use JOIN to pull them all at once.
+ * 
+ * 2. FILTERING BY USER:
+ * We use $user_id from the session to ensure a passenger only sees their own 
+ * tickets, not tickets belonging to someone else.
+ * 
+ * 3. ORDERING BY DATE:
+ * We use "ORDER BY tr.travel_date DESC" to show the most recent or upcoming 
+ * trips at the very top of the list.
+ */
+?>

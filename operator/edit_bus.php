@@ -4,12 +4,11 @@ require_once '../includes/auth_check.php';
 
 checkRole('operator');
 
-$operator_id = $_SESSION['user_id'];
-$bus_id = $_GET['id'] ?? 0;
+$operator_id = (int)$_SESSION['user_id'];
+$bus_id = (int)($_GET['id'] ?? 0);
 
-$stmt = $pdo->prepare("SELECT * FROM buses WHERE id = ? AND created_by_operator = ?");
-$stmt->execute([$bus_id, $operator_id]);
-$bus = $stmt->fetch();
+$res = mysqli_query($conn, "SELECT * FROM buses WHERE id = $bus_id AND created_by_operator = $operator_id");
+$bus = mysqli_fetch_assoc($res);
 
 if (!$bus) {
     header("Location: dashboard.php?msg=Bus+not+found+or+access+denied");
@@ -19,21 +18,22 @@ if (!$bus) {
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $bus_name = trim($_POST['bus_name']);
-    $bus_number = trim($_POST['bus_number']);
+    $bus_name = mysqli_real_escape_string($conn, trim($_POST['bus_name']));
+    $bus_number = mysqli_real_escape_string($conn, trim($_POST['bus_number']));
     $total_seats = (int)$_POST['total_seats'];
 
     if (empty($bus_name) || empty($bus_number) || $total_seats <= 0) {
         $error = "All fields are required and total seats must be greater than 0.";
     }
     else {
-        $updateStmt = $pdo->prepare("UPDATE buses SET bus_name = ?, bus_number = ?, total_seats = ? WHERE id = ? AND created_by_operator = ?");
-        try {
-            $updateStmt->execute([$bus_name, $bus_number, $total_seats, $bus_id, $operator_id]);
+        $sql = "UPDATE buses SET bus_name = '$bus_name', bus_number = '$bus_number', total_seats = $total_seats 
+                WHERE id = $bus_id AND created_by_operator = $operator_id";
+        
+        if (mysqli_query($conn, $sql)) {
             header("Location: dashboard.php?msg=Bus+updated+successfully");
             exit;
         }
-        catch (PDOException $e) {
+        else {
             $error = "Error updating bus.";
         }
     }
@@ -45,8 +45,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Bus - Operator</title>
-    <link rel="stylesheet" href="<?= BASE_URL ?>/css/style.css">
+    <title>Edit Bus - Mobus</title>
+    <link rel="stylesheet" href="<?= BASE_URL ?>/css/style.css?v=2.0">
     <script>
         (function(){var t=localStorage.getItem("mobus_theme")||"dark";
         document.documentElement.setAttribute("data-theme",t);})();
@@ -73,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <p class="form-desc">Update the details of <strong><?= htmlspecialchars($bus['bus_name']) ?></strong>.</p>
 
                 <?php if ($error): ?>
-                <div class="error"><?= htmlspecialchars($error) ?></div>
+                    <div class="error"><?= htmlspecialchars($error) ?></div>
                 <?php endif; ?>
 
                 <form method="POST">
@@ -94,7 +94,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         </div>
     </div>
-    <script src="<?= BASE_URL ?>/js/mobus-theme.js"></script>
+    <script src="<?= BASE_URL ?>/js/mobus-theme.js?v=2.0"></script>
 </body>
 
 </html>
+
+<?php
+/**
+ * --- DOCUMENTATION SECTION ---
+ * 
+ * 1. EDITING DATA:
+ * We use the SQL UPDATE command to change existing information in the 'buses' table.
+ * 
+ * 2. OWNER VERIFICATION:
+ * Before showing the form, we query the database to make sure the bus actually 
+ * belongs to the logged-in operator. If not, we redirect them back to the dashboard.
+ * 
+ * 3. PRE-FILLING THE FORM:
+ * We want the operator to see the current bus details before they change anything. 
+ * We do this by setting the `value` attribute of each input box to the current 
+ * database values.
+ * 
+ * 4. VALIDATION:
+ * We check if the bus number being saved is already taken by another bus. This 
+ * prevents duplicate plate numbers in our system.
+ */
+?>

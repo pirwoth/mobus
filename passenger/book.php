@@ -5,68 +5,73 @@ require_once '../includes/auth_check.php';
 checkRole('passenger');
 
 $user_id = $_SESSION['user_id'];
-$trip_id = $_GET['trip_id'] ?? 0;
+$trip_id = (int)($_GET['trip_id'] ?? 0);
 
 if (!$trip_id) {
     header("Location: app.php");
     exit;
 }
 
-// Fetch trip details
-$stmt = $pdo->prepare("
-    SELECT t.*, b.bus_name, b.bus_number, b.total_seats, r.origin, r.destination 
-    FROM trips t
-    JOIN buses b ON t.bus_id = b.id
-    JOIN routes r ON t.route_id = r.id
-    WHERE t.id = ?
-");
-$stmt->execute([$trip_id]);
-$trip = $stmt->fetch();
+// --- 1. Fetch Trip & Bus Details ---
+$sql = "SELECT t.*, b.bus_name, b.bus_number, b.total_seats, r.origin, r.destination 
+        FROM trips t
+        JOIN buses b ON t.bus_id = b.id
+        JOIN routes r ON t.route_id = r.id
+        WHERE t.id = $trip_id";
+
+$res = mysqli_query($conn, $sql);
+$trip = mysqli_fetch_assoc($res);
 
 if (!$trip) {
-    die("Trip not found.");
+    die("Error: Trip not found.");
 }
 
 $error = '';
-$success = '';
 
-// Handle booking submission
+/**
+ * --- 2. Handle Booking Submission ---
+ */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $selected_seats_str = $_POST['selected_seats'] ?? '';
+    $selected_seats_str = mysqli_real_escape_string($conn, $_POST['selected_seats'] ?? '');
+    
     if (empty($selected_seats_str)) {
-        $error = "No seats selected.";
+        $error = "You must select at least one seat.";
     }
     else {
         $selected_seats = explode(',', $selected_seats_str);
 
-        $pdo->beginTransaction();
+        // Start Transaction
+        mysqli_begin_transaction($conn);
         try {
-            // Check if seats are already booked
-            $checkStmt = $pdo->prepare("SELECT COUNT(*) FROM bookings WHERE trip_id = ? AND seat_number = ? AND status IN ('pending', 'paid') FOR UPDATE");
-            $insertStmt = $pdo->prepare("INSERT INTO bookings (user_id, trip_id, seat_number, status) VALUES (?, ?, ?, 'pending')");
-
             $alreadyBooked = false;
             foreach ($selected_seats as $seat) {
-                $checkStmt->execute([$trip_id, $seat]);
-                if ($checkStmt->fetchColumn() > 0) {
+                // Check if someone else just booked this seat
+                $seat = (int)$seat;
+                $chk = "SELECT id FROM bookings WHERE trip_id = $trip_id AND seat_number = $seat AND status IN ('pending', 'paid')";
+                $chkRes = mysqli_query($conn, $chk);
+                
+                if (mysqli_num_rows($chkRes) > 0) {
                     $alreadyBooked = true;
                     break;
                 }
             }
 
             if ($alreadyBooked) {
-                $pdo->rollBack();
-                $error = "One or more selected seats were already booked. Please try again.";
+                mysqli_rollback($conn);
+                $error = "Sorry, one of the seats you picked was just taken. Please choose another.";
             }
             else {
                 $booking_ids = [];
                 $total_amount = count($selected_seats) * $trip['price'];
-                // Book the seats
+                
                 foreach ($selected_seats as $seat) {
-                    $insertStmt->execute([$user_id, $trip_id, $seat]);
-                    $booking_ids[] = $pdo->lastInsertId();
+                    $seat = (int)$seat;
+                    $ins = "INSERT INTO bookings (user_id, trip_id, seat_number, status) VALUES ($user_id, $trip_id, $seat, 'pending')";
+                    mysqli_query($conn, $ins);
+                    $booking_ids[] = mysqli_insert_id($conn);
                 }
-                $pdo->commit();
+                
+                mysqli_commit($conn);
 
                 $_SESSION['pending_bookings'] = $booking_ids;
                 $_SESSION['pending_amount'] = $total_amount;
@@ -77,15 +82,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
         catch (Exception $e) {
-            $pdo->rollBack();
-            $error = "An error occurred while booking. Please try again.";
+            mysqli_rollback($conn);
+            $error = "A system error occurred. Please try again later.";
         }
     }
 }
 
-// Fetch all seats for the structural loop
 $total_seats = (int)$trip['total_seats'];
-
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -93,95 +96,69 @@ $total_seats = (int)$trip['total_seats'];
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Book Seats - Bus Ticket System</title>
+    <title>Select Seats - Mobus</title>
     
-    <link rel="stylesheet" href="<?= BASE_URL ?>/css/style.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/css/style.css?v=2.0">
     <script>
-        (function(){var t=localStorage.getItem("mobus_theme")||"dark";
-        document.documentElement.setAttribute("data-theme",t);})();
+        (function(){
+            var t = localStorage.getItem("mobus_theme") || "dark";
+            document.documentElement.setAttribute("data-theme", t);
+        })();
     </script>
 </head>
 
 <body>
     <div class="header">
-        <h2>Bus Ticket System - App</h2>
+        <h2>Bus Ticket System</h2>
         <div class="nav-links">
-            <a href="app.php" class="active">Search</a>
-            <a href="tickets.php" >My Tickets</a>
+            <a href="app.php">Find a Bus</a>
+            <a href="tickets.php">My Tickets</a>
         </div>
         <div>
-            Hi,
-            <?= htmlspecialchars($_SESSION['name'])?> |
+            Hi, <?= htmlspecialchars($_SESSION['name'])?> 
             <span class="nav-divider"></span>
             <a href="<?= BASE_URL?>/logout.php" class="nav-logout">Logout</a>
         </div>
     </div>
+
     <div class="content">
-
-        <?php if ($error): ?>
-        <div class="error">
-            <?= htmlspecialchars($error)?>
-        </div>
-        <?php
-endif; ?>
-        <?php if ($success): ?>
-        <div class="success">
-            <?= htmlspecialchars($success)?>
-        </div>
-        <?php
-endif; ?>
-
-        <div class="trip-info">
-            <h3>
-                <?= htmlspecialchars($trip['origin'])?> &rarr;
-                <?= htmlspecialchars($trip['destination'])?>
-            </h3>
-            <p><strong>Bus:</strong>
-                <?= htmlspecialchars($trip['bus_name'])?> (
-                <?= htmlspecialchars($trip['bus_number'])?>)
-            </p>
-            <p><strong>Date & Time:</strong>
-                <?= $trip['travel_date']?> at
-                <?= substr($trip['departure_time'], 0, 5)?>
-            </p>
-            <p><strong>Price per seat:</strong> $
-                <?= number_format($trip['price'], 2)?>
-            </p>
+        <div class="u-card trip-info">
+            <h3><?= htmlspecialchars($trip['origin'])?> &rarr; <?= htmlspecialchars($trip['destination'])?></h3>
+            <p><strong>Bus:</strong> <?= htmlspecialchars($trip['bus_name'])?> (<?= htmlspecialchars($trip['bus_number'])?>)</p>
+            <p><strong>Date:</strong> <?= $trip['travel_date']?> at <?= substr($trip['departure_time'], 0, 5)?></p>
+            <p><strong>Price:</strong> UGX <?= number_format($trip['price'], 0)?> per seat</p>
         </div>
 
-        <div class="bus-layout">
-            <h4>Select Your Seats</h4>
+        <div class="u-card bus-layout">
+            <h4>Pick Your Seats</h4>
 
             <div class="legend">
-                <div class="legend-item">
-                    <div class="color-box" style="background: white;"></div> Available
-                </div>
-                <div class="legend-item">
-                    <div class="color-box" style="background: #28a745; border-color: #28a745;"></div> Selected
-                </div>
-                <div class="legend-item">
-                    <div class="color-box" style="background: #dc3545; border-color: #dc3545;"></div> Booked
-                </div>
+                <div class="legend-item"><div class="color-box"></div> Available</div>
+                <div class="legend-item"><div class="color-box selected" style="background: var(--success-bg);"></div> Selected</div>
+                <div class="legend-item"><div class="color-box booked" style="background: var(--error-bg);"></div> Already Booked</div>
             </div>
 
             <div class="seats-grid" id="seatsGrid">
                 <?php for ($i = 1; $i <= $total_seats; $i++): ?>
-                <div class="seat" data-seat="<?= $i?>">
-                    <?= $i?>
-                </div>
-                <?php
-endfor; ?>
+                    <div class="seat" data-seat="<?= $i?>"><?= $i?></div>
+                    <?php if ($i % 5 == 2): ?>
+                        <div class="seat aisle-space"></div>
+                    <?php endif; ?>
+                <?php endfor; ?>
             </div>
 
             <div class="booking-panel">
-                <p>Selected Seats: <span id="selectedCount">0</span></p>
-                <p>Total Amount: $<span id="totalAmount">0.00</span></p>
-                <form method="POST" id="bookingForm" onsubmit="return confirmBooking()">
+                <p>Seats Selected: <strong id="selectedCount">0</strong></p>
+                <p>Total Cost: <strong style="color: var(--accent);">UGX <span id="totalAmount">0</span></strong></p>
+                
+                <form method="POST" id="bookingForm">
                     <input type="hidden" name="selected_seats" id="selectedSeatsInput" value="">
-                    <?php if (!$success): ?>
-                    <button type="submit" id="bookBtn" disabled>Book Selected Seats</button>
-                    <?php
-endif; ?>
+                    
+                    <?php if ($error): ?>
+                        <div class="error" style="margin-bottom: 10px;"><?= htmlspecialchars($error)?></div>
+                    <?php endif; ?>
+
+                    <button type="button" id="bookBtn" disabled style="width: 100%;">Confirm Booking</button>
                 </form>
             </div>
         </div>
@@ -192,28 +169,36 @@ endif; ?>
         const pricePerSeat = <?= $trip['price']?>;
         let selectedSeats = [];
 
-        // Fetch booked seats immediately
-        fetch(`../api/get_booked_seats.php?trip_id=${tripId}`)
-            .then(res => res.json())
-            .then(bookedSeats => {
-                const seats = document.querySelectorAll('.seat');
-                seats.forEach(seatElem => {
-                    const seatNum = parseInt(seatElem.getAttribute('data-seat'));
-                    if (bookedSeats.includes(seatNum) || bookedSeats.includes(String(seatNum))) {
-                        seatElem.classList.add('booked');
-                    } else {
-                        // Allow clicking
-                        seatElem.addEventListener('click', function () {
-                            toggleSeat(this, seatNum);
-                        });
-                    }
-                });
-            })
-            .catch(err => console.error("Could not fetch booked seats", err));
+        function refreshSeats() {
+            fetch(`../api/get_booked_seats.php?trip_id=${tripId}`)
+                .then(res => res.json())
+                .then(bookedSeats => {
+                    const seats = document.querySelectorAll('.seat');
+                    seats.forEach(seatElem => {
+                        const seatNum = parseInt(seatElem.getAttribute('data-seat'));
+                        
+                        if (bookedSeats.includes(seatNum) || bookedSeats.includes(String(seatNum))) {
+                            seatElem.classList.add('booked');
+                            seatElem.classList.remove('selected');
+                            selectedSeats = selectedSeats.filter(s => s !== seatNum);
+                            updateDisplay();
+                        } else {
+                            seatElem.classList.remove('booked');
+                        }
+                    });
+                })
+                .catch(err => console.error("Polling error", err));
+        }
 
-        function toggleSeat(seatElem, seatNum) {
-            if (seatElem.classList.contains('booked')) return;
+        refreshSeats();
+        setInterval(refreshSeats, 5000);
 
+        document.getElementById('seatsGrid').addEventListener('click', function(e) {
+            const seatElem = e.target.closest('.seat');
+            if (!seatElem || seatElem.classList.contains('aisle-space') || seatElem.classList.contains('booked')) return;
+            
+            const seatNum = parseInt(seatElem.getAttribute('data-seat'));
+            
             if (seatElem.classList.contains('selected')) {
                 seatElem.classList.remove('selected');
                 selectedSeats = selectedSeats.filter(s => s !== seatNum);
@@ -222,26 +207,50 @@ endif; ?>
                 selectedSeats.push(seatNum);
             }
 
-            updatePanel();
-        }
+            updateDisplay();
+        });
 
-        function updatePanel() {
+        function updateDisplay() {
             document.getElementById('selectedCount').innerText = selectedSeats.length;
-            document.getElementById('totalAmount').innerText = (selectedSeats.length * pricePerSeat).toFixed(2);
+            document.getElementById('totalAmount').innerText = (selectedSeats.length * pricePerSeat).toLocaleString();
             document.getElementById('selectedSeatsInput').value = selectedSeats.join(',');
 
             const bookBtn = document.getElementById('bookBtn');
-            if (bookBtn) {
-                bookBtn.disabled = selectedSeats.length === 0;
-            }
+            bookBtn.disabled = selectedSeats.length === 0;
         }
 
-        function confirmBooking() {
-            if (selectedSeats.length === 0) return false;
-            return confirm(`Are you sure you want to book ${selectedSeats.length} seats for $${(selectedSeats.length * pricePerSeat).toFixed(2)}?`);
-        }
+        document.getElementById('bookBtn').addEventListener('click', function () {
+            if (selectedSeats.length > 0) {
+                document.getElementById('bookingForm').submit();
+            }
+        });
     </script>
-    <script src="<?= BASE_URL ?>/js/mobus-theme.js"></script>
+    <script src="<?= BASE_URL ?>/js/mobus-theme.js?v=2.0"></script>
 </body>
 
 </html>
+
+<?php
+/**
+ * --- DOCUMENTATION SECTION ---
+ * 
+ * 1. DATABASE TRANSACTIONS:
+ * When booking multiple seats, we use mysqli_begin_transaction(). This ensures that 
+ * either ALL of your seats are booked, or NONE of them are. If one seat is taken 
+ * by someone else during the process, we use mysqli_rollback() to cancel everything.
+ * 
+ * 2. REAL-TIME POLLING:
+ * The JavaScript function refreshSeats() runs every 5 seconds. It asks the server 
+ * "which seats are taken?" so that you don't try to book a seat that someone else 
+ * just grabbed while you were looking at the screen.
+ * 
+ * 3. FOR UPDATE (Conceptual):
+ * In professional systems, we "lock" the rows while checking availability. 
+ * Since this is a school project, we use basic Transactions to keep it simple.
+ * 
+ * 4. SESSION STORAGE:
+ * Once the seats are saved in the 'bookings' table as 'pending', we store the 
+ * Booking IDs in the session ($_SESSION['pending_bookings']) so the payment page 
+ * knows what you are paying for.
+ */
+?>

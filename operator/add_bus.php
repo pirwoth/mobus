@@ -7,8 +7,8 @@ checkRole('operator');
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $bus_name = trim($_POST['bus_name']);
-    $bus_number = trim($_POST['bus_number']);
+    $bus_name = mysqli_real_escape_string($conn, trim($_POST['bus_name']));
+    $bus_number = mysqli_real_escape_string($conn, trim($_POST['bus_number']));
     $total_seats = (int)$_POST['total_seats'];
     $operator_id = $_SESSION['user_id'];
 
@@ -16,21 +16,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = "All fields are required and total seats must be greater than 0.";
     }
     else {
-        $stmt = $pdo->prepare("INSERT INTO buses (bus_name, bus_number, total_seats, created_by_operator) VALUES (?, ?, ?, ?)");
-        try {
-            $stmt->execute([$bus_name, $bus_number, $total_seats, $operator_id]);
-            $bus_id = $pdo->lastInsertId();
+        $sql = "INSERT INTO buses (bus_name, bus_number, total_seats, created_by_operator) 
+                VALUES ('$bus_name', '$bus_number', $total_seats, $operator_id)";
+        
+        if (mysqli_query($conn, $sql)) {
+            $bus_id = mysqli_insert_id($conn);
 
-            // Auto-generate seats for this bus
-            $seatStmt = $pdo->prepare("INSERT INTO seats (bus_id, seat_number) VALUES (?, ?)");
             for ($i = 1; $i <= $total_seats; $i++) {
-                $seatStmt->execute([$bus_id, $i]);
+                mysqli_query($conn, "INSERT INTO seats (bus_id, seat_number) VALUES ($bus_id, $i)");
             }
 
             header("Location: dashboard.php?msg=Bus+added+successfully");
             exit;
         }
-        catch (PDOException $e) {
+        else {
             $error = "Error adding bus. Bus number might already exist.";
         }
     }
@@ -42,8 +41,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add Bus - Operator</title>
-    <link rel="stylesheet" href="<?= BASE_URL ?>/css/style.css">
+    <title>Add Bus - Mobus</title>
+    <link rel="stylesheet" href="<?= BASE_URL ?>/css/style.css?v=2.0">
     <script>
         (function(){var t=localStorage.getItem("mobus_theme")||"dark";
         document.documentElement.setAttribute("data-theme",t);})();
@@ -70,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <p class="form-desc">Add a bus to your fleet. Seats will be automatically generated.</p>
 
                 <?php if ($error): ?>
-                <div class="error"><?= htmlspecialchars($error) ?></div>
+                    <div class="error"><?= htmlspecialchars($error) ?></div>
                 <?php endif; ?>
 
                 <form method="POST">
@@ -91,7 +90,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         </div>
     </div>
-    <script src="<?= BASE_URL ?>/js/mobus-theme.js"></script>
+    <script src="<?= BASE_URL ?>/js/mobus-theme.js?v=2.0"></script>
 </body>
 
 </html>
+
+<?php
+/**
+ * --- DOCUMENTATION SECTION ---
+ * 
+ * 1. ADDING A BUS:
+ * When a bus is added, we save its name, plate number, and capacity in the 'buses' table.
+ * 
+ * 2. AUTO-GENERATING SEATS:
+ * We use a "FOR loop" to create individual seat records in the 'seats' table. 
+ * If a bus has 45 seats, the loop runs 45 times to insert seats 1 through 45.
+ * 
+ * 3. RETRIEVING THE NEW ID:
+ * We use mysqli_insert_id($conn) to get the ID of the bus we just saved. 
+ * This is necessary so we can link the new seats to the correct bus.
+ * 
+ * 4. MULTI-OPERATOR SYSTEM:
+ * We save the `operator_id` (from the session) with the bus record. 
+ * This ensures that only the operator who added the bus can manage it.
+ */
+?>
