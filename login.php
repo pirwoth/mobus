@@ -3,12 +3,14 @@ require_once 'config/db.php';
 require_once 'includes/auth_check.php';
 
 if (isset($_SESSION['user_id'])) {
+    // Redirect already logged-in users to their respective dashboards
     redirectUserToDashboard($_SESSION['role']);
 }
 
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Sanitize user input to prevent SQL injection attacks
     $email_or_phone = mysqli_real_escape_string($conn, $_POST['email_or_phone'] ?? '');
     $password = $_POST['password'] ?? '';
 
@@ -21,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $result = mysqli_query($conn, $sql);
         $user = mysqli_fetch_assoc($result);
 
-        // Step 2: Verify password
+        // Step 2: Verify password using PHP's secure verification function
         if ($user && password_verify($password, $user['password'])) {
             
             if ($user['is_verified'] == 0) {
@@ -29,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             }
 
-            // Step 3: Set session
+            // Step 3: Set session variables for global access
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['name'] = $user['name'];
             $_SESSION['role'] = $user['role'];
@@ -54,6 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <script>
         (function(){
+            // Check for saved theme preference in browser storage
             var savedTheme = localStorage.getItem("mobus_theme") || "dark";
             document.documentElement.setAttribute("data-theme", savedTheme);
         })();
@@ -108,6 +111,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <script>
         function togglePassword() {
             var p = document.getElementById("password");
+            // Toggle input between 'password' and 'text' types
             p.type = (p.type === "password") ? "text" : "password";
         }
     </script>

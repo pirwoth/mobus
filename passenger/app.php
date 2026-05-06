@@ -5,6 +5,7 @@ require_once '../includes/auth_check.php';
 checkRole('passenger');
 
 // Step 1: Fetch unique origins and destinations
+// Fetch unique origin and destination pairs to fill the search dropdowns
 $resRoutes = mysqli_query($conn, "SELECT DISTINCT origin, destination FROM routes ORDER BY origin ASC");
 $origins = [];
 $destinations = [];
@@ -101,6 +102,7 @@ $destinations = array_unique($destinations);
 
             resultsContainer.innerHTML = '<p style="text-align: center;">Searching for the best trips...</p>';
 
+            // Fetch available trips asynchronously using the browser's Fetch API
             fetch(`../api/search_buses.php?origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}&travel_date=${encodeURIComponent(travelDate)}`)
                 .then(response => response.json())
                 .then(data => {

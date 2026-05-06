@@ -1,8 +1,8 @@
 <?php
-$host = '127.0.0.1';
-$dbname = 'mobus';
-$username = 'root';
-$password = '';
+$host = '127.0.0.1'; // Database host
+$dbname = 'mobus';    // Database name
+$username = 'root';   // Database username
+$password = '';       // Database password (default is empty for XAMPP)
 
 // Step 1: Establish connection using MySQLi (Procedural)
 $conn = mysqli_connect($host, $username, $password, $dbname);
@@ -12,9 +12,9 @@ if (!$conn) {
     die("Database connection failed: " . mysqli_connect_error());
 }
 
-// Step 3: Define Base URL for project navigation
+// Step 3: Define Base URL for project navigation (handles subfolder hosting)
 $base_url = strpos($_SERVER['PHP_SELF'], '/mobus/') === 0 ? '/mobus' : '';
-define('BASE_URL', $base_url);
+define('BASE_URL', $base_url); // Define global constant for easy access
 
 /**
  * --- DOCUMENTATION & EXPLANATIONS ---

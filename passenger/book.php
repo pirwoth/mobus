@@ -138,6 +138,7 @@ $total_seats = (int)$trip['total_seats'];
                 <div class="legend-item"><div class="color-box booked" style="background: var(--error-bg);"></div> Already Booked</div>
             </div>
 
+            // Container for the interactive bus seating layout
             <div class="seats-grid" id="seatsGrid">
                 <?php for ($i = 1; $i <= $total_seats; $i++): ?>
                     <div class="seat" data-seat="<?= $i?>"><?= $i?></div>
@@ -170,6 +171,7 @@ $total_seats = (int)$trip['total_seats'];
         let selectedSeats = [];
 
         function refreshSeats() {
+            // Periodically check for newly booked seats from the database
             fetch(`../api/get_booked_seats.php?trip_id=${tripId}`)
                 .then(res => res.json())
                 .then(bookedSeats => {
@@ -191,8 +193,10 @@ $total_seats = (int)$trip['total_seats'];
         }
 
         refreshSeats();
+        // Set interval to refresh seat availability every 5 seconds (Live Polling)
         setInterval(refreshSeats, 5000);
 
+        // Use event delegation on the grid to handle clicks on individual seats
         document.getElementById('seatsGrid').addEventListener('click', function(e) {
             const seatElem = e.target.closest('.seat');
             if (!seatElem || seatElem.classList.contains('aisle-space') || seatElem.classList.contains('booked')) return;

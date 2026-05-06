@@ -7,6 +7,7 @@ checkRole('operator');
 $operator_id = $_SESSION['user_id'];
 
 // Step 1: Fetch buses for this operator
+// Fetch buses belonging only to the currently logged-in operator
 $sql = "SELECT * FROM buses WHERE created_by_operator = $operator_id ORDER BY created_at DESC";
 $result = mysqli_query($conn, $sql);
 $buses = [];
@@ -75,6 +76,7 @@ while ($row = mysqli_fetch_assoc($result)) {
                     <td class="actions">
                         <a href="edit_bus.php?id=<?= $bus['id']?>" class="btn btn-edit">Edit</a>
                         <a href="delete_bus.php?id=<?= $bus['id']?>" class="btn btn-delete"
+                            // User confirmation to prevent accidental data loss
                             onclick="return confirm('Deleting this bus will also remove its trips. Continue?');">Delete</a>
                     </td>
                 </tr>

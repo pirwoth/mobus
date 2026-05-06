@@ -1,10 +1,12 @@
 <?php
+// Inform the browser that the output is in JSON format
 header('Content-Type: application/json');
 require_once '../config/db.php';
 require_once '../includes/auth_check.php';
 
 checkRole('passenger');
 
+// Sanitizing user input for security
 $trip_id = (int)($_GET['trip_id'] ?? 0);
 
 if (empty($trip_id)) {
@@ -13,6 +15,7 @@ if (empty($trip_id)) {
     exit;
 }
 
+// Handling database request for booked seats
 $sql = "SELECT seat_number FROM bookings WHERE trip_id = $trip_id";
 $result = mysqli_query($conn, $sql);
 
@@ -22,6 +25,7 @@ if (!$result) {
 } else {
     $rows = [];
     while ($row = mysqli_fetch_assoc($result)) {
+        // Cast seat number to an integer for strict JSON data types
         $rows[] = (int)$row['seat_number'];
     }
     echo json_encode($rows);

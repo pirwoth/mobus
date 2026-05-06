@@ -1,8 +1,5 @@
 <?php
-/**
- * Authentication Helper Functions
- * These functions help us track if a user is logged in and what they are allowed to see.
- */
+
 session_start(); // Start the session to access $_SESSION variables
 
 /**
@@ -11,6 +8,7 @@ session_start(); // Start the session to access $_SESSION variables
  */
 function isLoggedIn()
 {
+    // Checks if the 'user_id' key is present in the session array
     return isset($_SESSION['user_id']);
 }
 
@@ -28,7 +26,7 @@ function checkRole($requiredRole)
 
     // If their role doesn't match the required role for this page
     if ($_SESSION['role'] !== $requiredRole) {
-        // Find out where they SHOULD be based on their actual role
+        // Redirect them to their own dashboard to prevent unauthorized access
         redirectUserToDashboard($_SESSION['role']);
         exit();
     }
@@ -59,3 +57,14 @@ function redirectUserToDashboard($role)
     exit();
 }
 ?>
+
+
+
+<!-- 
+
+Authentication Helper Functions
+These functions help us track if a user is logged in and what they are allowed to see. 
+
+
+-->
+ 

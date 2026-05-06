@@ -22,6 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $sql = "SELECT b.*, u.name as passenger_name, tr.departure_time, tr.travel_date,
                        r.origin, r.destination, bus.bus_name, bus.bus_number
                 FROM bookings b
+                // Link multiple tables to display complete trip and passenger info to the conductor
                 JOIN users u ON b.user_id = u.id
                 JOIN trips tr ON b.trip_id = tr.id
                 JOIN routes r ON tr.route_id = r.id
@@ -46,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         else {
             // VALID TICKET! 
-            // Step 3: Mark as verified
+            // Step 3: Mark as verified to prevent reuse of the same ticket
             $tid = $ticket_data['id'];
             mysqli_query($conn, "UPDATE bookings SET is_verified = 1 WHERE id = $tid");
             
@@ -129,6 +130,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     document.getElementById('verifyForm').submit();
                 }
 
+                // Initialize the QR scanner library with specific frame rate and scanning box size
                 let html5QrcodeScanner = new Html5QrcodeScanner(
                     "reader", { fps: 10, qrbox: 250 }
                 );

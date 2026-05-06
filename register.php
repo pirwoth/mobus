@@ -9,6 +9,7 @@ if (isset($_SESSION['user_id'])) {
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Protect against SQL injection by escaping all string inputs
     $name = mysqli_real_escape_string($conn, $_POST['name'] ?? '');
     $email = mysqli_real_escape_string($conn, $_POST['email'] ?? '');
     $phone = mysqli_real_escape_string($conn, $_POST['phone'] ?? '');
@@ -34,8 +35,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = "An account with this email or phone already exists.";
         }
         else {
-            // Step 3: Hash password and prepare data
+            // Step 3: Securely hash the password before storing it
             $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+            // Generate a random 6-digit code for account verification
             $verification_code = rand(100000, 999999);
             $role = 'passenger'; 
 
@@ -65,6 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="stylesheet" href="<?= BASE_URL ?>/css/style.css?v=2.0">
     <script>
         (function(){
+            // Apply the user's preferred theme (dark/light) from local storage
             var t = localStorage.getItem("mobus_theme") || "dark";
             document.documentElement.setAttribute("data-theme", t);
         })();

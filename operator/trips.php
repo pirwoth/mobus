@@ -7,6 +7,7 @@ checkRole('operator');
 $operator_id = $_SESSION['user_id'];
 
 // Step 1: Fetch all trips for this operator using a JOIN
+// Gather trip details along with bus and route information using JOINs
 $sql = "SELECT t.*, b.bus_name, b.bus_number, r.origin, r.destination 
         FROM trips t
         JOIN buses b ON t.bus_id = b.id
@@ -84,6 +85,7 @@ while ($row = mysqli_fetch_assoc($result)) {
                         <?= htmlspecialchars($trip['origin'])?> &rarr; <?= htmlspecialchars($trip['destination'])?>
                     </td>
                     <td>
+                        // Display the date and 24-hour time (HH:MM)
                         <?= $trip['travel_date']?> at <?= substr($trip['departure_time'], 0, 5)?>
                     </td>
                     <td>

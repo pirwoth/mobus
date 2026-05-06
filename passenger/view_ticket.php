@@ -23,6 +23,7 @@ $sql = "SELECT tkt.*, b.ticket_number, b.seat_number, b.id as booking_id,
         JOIN buses bus ON tr.bus_id = bus.id
         JOIN routes r ON tr.route_id = r.id
         JOIN users u ON b.user_id = u.id
+        // Critical Security: Ensure the ticket belongs to the logged-in user
         WHERE tkt.id = $ticket_id AND b.user_id = $user_id";
 
 $result = mysqli_query($conn, $sql);

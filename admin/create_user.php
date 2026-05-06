@@ -32,6 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_staff'])) {
         }
         else {
             $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+            // Create a staff account that is verified by default (is_verified = 1)
             $sql = "INSERT INTO users (name, email, phone, password, role, is_verified) 
                     VALUES ('$name', '$email', '$phone', '$hashedPassword', '$role', 1)";
             
@@ -140,6 +141,7 @@ while ($row = mysqli_fetch_assoc($resStaff)) {
                                 </td>
                                 <td>
                                     <a href="edit_staff.php?id=<?= $s['id']?>" class="btn-view" style="font-size: 11px; padding: 4px 8px;">Edit</a>
+                                    // Security confirmation before performing a destructive action
                                     <a href="delete_staff.php?id=<?= $s['id']?>" class="btn-delete" style="font-size: 11px; padding: 4px 8px;" onclick="return confirm('Delete this staff member?')">Delete</a>
                                 </td>
                             </tr>

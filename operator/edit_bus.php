@@ -7,6 +7,7 @@ checkRole('operator');
 $operator_id = (int)$_SESSION['user_id'];
 $bus_id = (int)($_GET['id'] ?? 0);
 
+// Verify that the requested bus ID exists and belongs to the current operator
 $res = mysqli_query($conn, "SELECT * FROM buses WHERE id = $bus_id AND created_by_operator = $operator_id");
 $bus = mysqli_fetch_assoc($res);
 
@@ -26,6 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = "All fields are required and total seats must be greater than 0.";
     }
     else {
+        // Update bus details while strictly enforcing ownership via WHERE clause
         $sql = "UPDATE buses SET bus_name = '$bus_name', bus_number = '$bus_number', total_seats = $total_seats 
                 WHERE id = $bus_id AND created_by_operator = $operator_id";
         

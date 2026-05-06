@@ -30,6 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     else {
         // Start Transaction
+        // Use a database transaction to ensure all booking steps succeed or fail together
         mysqli_begin_transaction($conn);
         try {
             $transaction_id = 'TXN-' . strtoupper(uniqid());
@@ -50,6 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 // 3. Generate QR and save ticket
                 $qr_data = "Ticket: " . $ticket_number;
+                // Generate a QR code URL using the open-source QRServer API
                 $qr_url = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" . urlencode($qr_data);
                 
                 $sqlTkt = "INSERT INTO tickets (booking_id, qr_code_url) VALUES ($b_id, '$qr_url')";
@@ -124,6 +126,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 <div class="total-bar">
                     <span>Payable Amount</span>
+                    // Format number with commas for better readability
                     <strong>UGX <?= number_format($total_amount, 0)?></strong>
                 </div>
 

@@ -1,4 +1,5 @@
 <?php
+// Inform the browser that the response is JSON data
 header('Content-Type: application/json');
 require_once '../config/db.php';
 
@@ -19,6 +20,7 @@ $sql = "SELECT
             t.departure_time AS 'Departure Time',
             t.price AS 'Price',
             b.total_seats AS 'Total Seats',
+            // Calculate remaining capacity by subtracting current bookings from total seats
             (b.total_seats - (SELECT COUNT(*) FROM bookings WHERE trip_id = t.id AND status IN ('pending', 'paid'))) AS 'Remaining Seats'
         FROM trips t
         JOIN routes r ON t.route_id = r.id

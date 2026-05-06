@@ -9,10 +9,12 @@ $user_id = $_SESSION['user_id'];
 // Fetch user's tickets (bookings with 'paid' status)
 $sql = "SELECT tkt.id as ticket_id, b.ticket_number, b.seat_number, 
                tr.departure_time, tr.travel_date, r.origin, r.destination, b.status
+        // Join multiple tables to gather full ticket details in one query
         FROM tickets tkt
         JOIN bookings b ON tkt.booking_id = b.id
         JOIN trips tr ON b.trip_id = tr.id
         JOIN routes r ON tr.route_id = r.id
+        // Security filter: users can only see their own tickets
         WHERE b.user_id = $user_id
         ORDER BY tr.travel_date DESC, tr.departure_time DESC";
 

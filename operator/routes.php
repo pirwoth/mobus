@@ -7,6 +7,7 @@ checkRole('operator');
 $operator_id = $_SESSION['user_id'];
 
 // Fetch routes for this operator and global routes
+// Fetch routes specific to this operator OR global routes created by Admin
 $sql = "SELECT * FROM routes WHERE created_by_operator = $operator_id OR created_by_operator IS NULL ORDER BY origin ASC";
 $result = mysqli_query($conn, $sql);
 $routes = [];
@@ -76,6 +77,7 @@ while ($row = mysqli_fetch_assoc($result)) {
                         <?php endif; ?>
                     </td>
                     <td>
+                        // Only show delete option if the operator created this route themselves
                         <?php if ($route['created_by_operator'] == $operator_id): ?>
                             <a href="delete_route.php?id=<?= $route['id']?>" class="btn btn-delete"
                                 onclick="return confirm('Delete this route? Trips using this route will ALSO be deleted!');">Delete</a>

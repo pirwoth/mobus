@@ -17,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = "Both Origin and Destination are required.";
     }
     else {
-        // Step 1: Check if this Global route already exists
+        // Step 1: Prevent duplicate global routes from being added
         $checkSql = "SELECT id FROM routes WHERE origin = '$origin' AND destination = '$destination' AND created_by_operator IS NULL";
         $checkRes = mysqli_query($conn, $checkSql);
 
@@ -26,6 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         else {
             // Step 2: Insert the new route
+            // Insert the new route as a system-wide Global route (operator ID is NULL)
             $sql = "INSERT INTO routes (origin, destination, created_by_operator) VALUES ('$origin', '$destination', NULL)";
             if (mysqli_query($conn, $sql)) {
                 header("Location: routes.php?msg=Global route added successfully");
@@ -50,6 +51,7 @@ while ($row = mysqli_fetch_assoc($resGlobal)) {
 // Fetch local routes (created by Operators)
 $sqlLocal = "SELECT r.*, u.name as operator_name 
              FROM routes r 
+             // Join with users table to get the name of the operator who created the route
              JOIN users u ON r.created_by_operator = u.id 
              WHERE r.created_by_operator IS NOT NULL 
              ORDER BY r.origin ASC";

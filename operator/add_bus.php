@@ -20,9 +20,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 VALUES ('$bus_name', '$bus_number', $total_seats, $operator_id)";
         
         if (mysqli_query($conn, $sql)) {
+            // Get the ID of the bus we just added to link the seats to it
             $bus_id = mysqli_insert_id($conn);
 
             for ($i = 1; $i <= $total_seats; $i++) {
+                // Automatically create a record for each physical seat on the bus
                 mysqli_query($conn, "INSERT INTO seats (bus_id, seat_number) VALUES ($bus_id, $i)");
             }
 
@@ -44,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <title>Add Bus - Mobus</title>
     <link rel="stylesheet" href="<?= BASE_URL ?>/css/style.css?v=2.0">
     <script>
-        (function(){var t=localStorage.getItem("mobus_theme")||"dark";
+        (function(){var t=localStorage.getItem("mobus_theme") || "dark";
         document.documentElement.setAttribute("data-theme",t);})();
     </script>
 </head>

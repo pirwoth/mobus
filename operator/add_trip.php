@@ -32,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = "All fields are required and price must be greater than 0.";
     }
     else {
-        // Validation check
+        // Validate that the bus actually belongs to this operator
         $busCheck = mysqli_query($conn, "SELECT id FROM buses WHERE id = $bus_id AND created_by_operator = $operator_id");
         if (mysqli_num_rows($busCheck) == 0) {
             $error = "Invalid bus selection.";
@@ -61,7 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <title>Schedule Trip - Mobus</title>
     <link rel="stylesheet" href="<?= BASE_URL ?>/css/style.css?v=2.0">
     <script>
-        (function(){var t=localStorage.getItem("mobus_theme")||"dark";
+        (function(){var t=localStorage.getItem("mobus_theme") || "dark";
         document.documentElement.setAttribute("data-theme",t);})();
     </script>
 </head>
@@ -117,6 +117,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <div class="form-row">
                             <div class="form-group">
                                 <label>Travel Date</label>
+                                // Prevent scheduling trips for past dates
                                 <input type="date" name="travel_date" min="<?php echo date('Y-m-d'); ?>" required>
                             </div>
                             <div class="form-group">
